@@ -21,7 +21,31 @@ import urllib.parse
 import xml.etree.ElementTree as ET
 
 TIMEOUT = 5
-MAX_TITLE = int(os.environ.get("NEWSLINE_MAXLEN") or 100)  # headline truncation
+def _maxlen():
+    # NEWSLINE_MAXLEN: a number (chars), "max"/"full" (no truncation), or "NN%"
+    # (approx of $COLUMNS, fallback 120 — exact terminal width isn't available at
+    # fetch time, so % is best-effort). Default 120.
+    raw = (os.environ.get("NEWSLINE_MAXLEN") or "").strip().lower()
+    if raw in ("max", "full", "0", "none"):
+        return 100000
+    if raw.endswith("%"):
+        try:
+            return max(20, int(os.environ.get("COLUMNS") or 120) * int(raw[:-1]) // 100)
+        except Exception:
+            return 120
+    try:
+        return int(raw)
+    except Exception:
+        return 120
+
+
+MAX_TITLE = _maxlen()  # headline truncation length
+
+# Leading glyph: default 📰; set NEWSLINE_ICON="none" to remove, or a custom glyph.
+_icon = os.environ.get("NEWSLINE_ICON", "\U0001F4F0")
+ICON = "" if _icon.strip().lower() in ("none", "off") else _icon
+# Optional trailing "opens externally" hint (↗); off by default.
+LINKHINT = (os.environ.get("NEWSLINE_LINKHINT") or "").strip().lower() in ("1", "true", "yes", "on")
 ATOM = "{http://www.w3.org/2005/Atom}"
 _ws = re.compile(r"\s+")
 
@@ -68,7 +92,8 @@ def top_headlines(urls, count):
             continue
         seen, picked = set(), []
         for title, link in items:
-            key = title.lower()
+            # collapse auto-generated series like "...시세표(16일)-1/-2/-3" to one
+            key = re.sub(r"\s*-\s*\d+\s*$", "", title).strip().lower()
             if key in seen:
                 continue
             seen.add(key)
@@ -89,7 +114,10 @@ def render(title, link, endpoint, lang):
     wrapped = endpoint + "?" + urllib.parse.urlencode({"u": link, "c": lang})
     if len(title) > MAX_TITLE:
         title = title[: MAX_TITLE - 1] + "…"
-    return osc8(wrapped, f"\U0001F4F0 {title}")
+    label = f"{ICON} {title}" if ICON else title
+    if LINKHINT:
+        label = f"{label} ↗"
+    return osc8(wrapped, label)
 
 
 def main():

@@ -52,13 +52,17 @@ PY
 
 load_config() {
   [ -f "$CONFIG" ] || return 0
-  local lang topic rotate count api endpoint
+  local lang topic rotate count api endpoint maxlen icon linkhint
   lang=$(cfg_get lang);   topic=$(cfg_get topic);   rotate=$(cfg_get rotate)
   count=$(cfg_get count); api=$(cfg_get api);       endpoint=$(cfg_get endpoint)
+  maxlen=$(cfg_get maxlen); icon=$(cfg_get icon);   linkhint=$(cfg_get linkhint)
   [ -n "$lang" ] && [ "$lang" != "auto" ] && export NEWSLINE_LANG="$lang"
   [ -n "$topic" ]    && export NEWSLINE_TOPIC="$topic"
   [ -n "$rotate" ]   && export NEWSLINE_ROTATE="$rotate"
   [ -n "$count" ]    && export NEWSLINE_COUNT="$count"
+  [ -n "$maxlen" ]   && export NEWSLINE_MAXLEN="$maxlen"
+  [ -n "$icon" ]     && export NEWSLINE_ICON="$icon"
+  [ -n "$linkhint" ] && export NEWSLINE_LINKHINT="$linkhint"
   [ -n "$api" ]      && export NEWSLINE_API="$api"
   [ -n "$endpoint" ] && export NEWSLINE_ENDPOINT="$endpoint"
 }
@@ -125,7 +129,7 @@ cmd_once() {
 }
 
 cmd_init() {
-  local lang="" topic="" api="" endpoint="" rotate="8" count="5" compose="auto" yes="0" base_override="" a
+  local lang="" topic="" api="" endpoint="" rotate="6" count="15" compose="auto" yes="0" base_override="" a
   while [ $# -gt 0 ]; do
     case "$1" in
       --lang) lang="$2"; shift 2;;      --topic) topic="$2"; shift 2;;

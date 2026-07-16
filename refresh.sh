@@ -15,7 +15,7 @@ FEEDS="${NEWSLINE_FEEDS:-$HERE/feeds.json}"
 # The redirect wrapper you control. This is the ONE remote piece — clicks pass
 # through it so monetization can be switched on later WITHOUT re-shipping.
 ENDPOINT="${NEWSLINE_ENDPOINT:-https://go.example.com/r}"
-COUNT="${NEWSLINE_COUNT:-5}"          # how many headlines to cache for rotation
+COUNT="${NEWSLINE_COUNT:-15}"         # how many headlines to cache for rotation
 LOCK="$CACHE_DIR/refresh.lock"
 mkdir -p "$CACHE_DIR" 2>/dev/null
 
