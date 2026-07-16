@@ -1,15 +1,13 @@
-# Homebrew formula for newsline (cc-plugin).
-# Copy this into your tap:  itdar/homebrew-tap  ->  Formula/newsline.rb
-# Then users install with:   brew install itdar/tap/newsline
-#
-# Release steps (see cc-plugin README):
-#   1) git tag v0.1.0 && git push --tags   (on itdar/cc-plugin)
-#   2) shasum -a 256 the tarball URL below, paste into `sha256`
+# Homebrew formula TEMPLATE for newsline.
+# The GitHub Actions workflow (.github/workflows/homebrew.yml) fills the
+# TAG/VERSION/SHA placeholders on tag push and pushes it to itdar/homebrew-tap.
+# (You normally never edit the deployed formula by hand.)
 class Newsline < Formula
   desc "Locale-aware one-line news in your Claude Code status line"
   homepage "https://github.com/itdar/cc-plugin"
-  url "https://github.com/itdar/cc-plugin/archive/refs/tags/v0.1.0.tar.gz"
-  sha256 "REPLACE_WITH_TARBALL_SHA256"
+  url "https://github.com/itdar/cc-plugin/archive/refs/tags/TAG_PLACEHOLDER.tar.gz"
+  version "VERSION_PLACEHOLDER"
+  sha256 "SHA_PLACEHOLDER"
   license "MIT"
 
   depends_on "python@3.12"
@@ -22,7 +20,7 @@ class Newsline < Formula
 
   def caveats
     <<~EOS
-      Wire it into Claude Code (composes with your existing status line):
+      Set up newsline (composes with your existing status line):
         newsline init
     EOS
   end
