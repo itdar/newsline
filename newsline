@@ -25,8 +25,10 @@ CONFIG_DIR="${NEWSLINE_CONFIG_DIR:-${XDG_CONFIG_HOME:-$HOME/.config}/newsline}"
 CONFIG="$CONFIG_DIR/config.json"
 SETTINGS="${NEWSLINE_SETTINGS:-$HOME/.claude/settings.json}"
 
-# Command written into settings.json. Prefer the PATH name; else quote the abs path.
-if command -v newsline >/dev/null 2>&1; then RENDER_CMD="newsline render"; else RENDER_CMD="\"$HERE/newsline\" render"; fi
+# Command written into settings.json. ALWAYS an absolute path — Claude Code runs
+# the status line in a non-login shell whose PATH may not include ~/.local/bin.
+NL_BIN="$(command -v newsline 2>/dev/null || echo "$HERE/newsline")"
+RENDER_CMD="\"$NL_BIN\" render"
 
 # ---- tiny JSON helpers (python; no jq dependency) ----
 cfg_get() { # cfg_get <key>
@@ -157,22 +159,17 @@ cmd_init() {
     lang="${lang:-$detected}"; topic="${topic:-general}"
   fi
 
-  # compose with an existing (non-newsline) status line?
+  # Always KEEP an existing status line and show newsline below it (no prompt).
+  # Only --no-compose (or an explicit --base) changes this.
   local existing base=""
   if [ -n "$base_override" ]; then
     base="$base_override"                       # caller supplied the base explicitly
-  else
+  elif [ "$compose" != "no" ]; then
     existing=$(settings_statusline_cmd "$SETTINGS")
     if [ -n "$existing" ] && ! printf '%s' "$existing" | grep -q "newsline"; then
-      a="y"
-      case "$compose" in
-        yes) a="y";; no) a="n";;
-        auto) if [ "$yes" = "0" ] && [ -t 0 ]; then
-                printf "Existing status line found — keep it and show newsline below? [Y/n]: "
-                read -r a; a="${a:-y}"
-              fi;;
-      esac
-      case "$a" in [Nn]*) base="";; *) base="$existing";; esac
+      base="$existing"                          # first run: capture the real status line
+    else
+      base=$(cfg_get base_statusline)           # re-init: KEEP the base we already saved
     fi
   fi
 
