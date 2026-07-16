@@ -33,5 +33,29 @@ chmod +x "$SHARE/newsline" "$SHARE/statusline.sh" "$SHARE/refresh.sh"
 ln -sf "$SHARE/newsline" "$BIN/newsline"
 
 echo "✔ installed: $BIN/newsline"
-case ":$PATH:" in *":$BIN:"*) ;; *) echo "⚠ add to PATH:  export PATH=\"$BIN:\$PATH\"  (~/.zshrc)";; esac
-echo "next:  newsline init"
+
+# Register $BIN on PATH for future shells (idempotent), by shell rc file.
+case ":$PATH:" in
+  *":$BIN:"*)
+    echo "next:  newsline init"
+    ;;
+  *)
+    case "$(basename "${SHELL:-sh}")" in
+      zsh)  rc="$HOME/.zshrc"  ; line="export PATH=\"$BIN:\$PATH\"" ;;
+      bash) rc="$HOME/.bashrc" ; line="export PATH=\"$BIN:\$PATH\"" ;;
+      fish) rc="$HOME/.config/fish/config.fish" ; line="fish_add_path \"$BIN\"" ;;
+      *)    rc="$HOME/.profile" ; line="export PATH=\"$BIN:\$PATH\"" ;;
+    esac
+    mkdir -p "$(dirname "$rc")"
+    if [ -f "$rc" ] && grep -qF "$BIN" "$rc" 2>/dev/null; then
+      echo "✔ PATH already configured in $rc"
+    else
+      printf '\n# added by newsline installer\n%s\n' "$line" >> "$rc"
+      echo "✔ added $BIN to PATH in $rc"
+    fi
+    echo
+    echo "→ activate in THIS shell:   export PATH=\"$BIN:\$PATH\""
+    echo "  (new terminals get it automatically)"
+    echo "then:  newsline init"
+    ;;
+esac
