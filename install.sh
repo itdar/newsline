@@ -54,8 +54,8 @@ case ":$PATH:" in
       echo "✔ added $BIN to PATH in $rc"
     fi
     echo
-    echo "→ activate in THIS shell:   export PATH=\"$BIN:\$PATH\""
-    echo "  (new terminals get it automatically)"
+    echo "→ apply to THIS shell now:   source $rc"
+    echo "  (new terminals apply it automatically)"
     echo "then:  newsline init"
     ;;
 esac

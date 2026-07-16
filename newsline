@@ -70,6 +70,37 @@ detect_lang() {
   echo "${l:-en}"
 }
 
+lang_label() {  # code -> native (English) display name
+  case "$1" in
+    ko) echo "한국어 (Korean)" ;;        ja) echo "日本語 (Japanese)" ;;
+    en) echo "English" ;;                 es) echo "Español (Spanish)" ;;
+    fr) echo "Français (French)" ;;       de) echo "Deutsch (German)" ;;
+    pt) echo "Português (Portuguese)" ;;  zh) echo "中文 (Chinese)" ;;
+    *)  echo "$1" ;;
+  esac
+}
+
+# choose <default_code> <code1> <label1> <code2> <label2> ...  -> sets $CHOICE
+CHOICE=""
+choose() {
+  local def="$1"; shift
+  local -a codes=() labels=()
+  while [ $# -gt 0 ]; do codes+=("$1"); labels+=("${2:-$1}"); shift 2; done
+  local i defnum=1
+  for i in "${!codes[@]}"; do
+    [ "${codes[$i]}" = "$def" ] && defnum=$((i + 1))
+    printf "  %2d) %s\n" "$((i + 1))" "${labels[$i]}" >&2
+  done
+  printf "  # [%d]: " "$defnum" >&2
+  local sel; read -r sel
+  case "$sel" in ''|*[!0-9]*) sel="$defnum" ;; esac
+  if [ "$sel" -ge 1 ] 2>/dev/null && [ "$sel" -le "${#codes[@]}" ] 2>/dev/null; then
+    CHOICE="${codes[$((sel - 1))]}"
+  else
+    CHOICE="$def"
+  fi
+}
+
 # ---- subcommands ----
 cmd_render() { # base (existing HUD) first, newsline below — never blocks
   load_config
@@ -106,10 +137,22 @@ cmd_init() {
   done
 
   local detected; detected=$(detect_lang)
-  if [ "$yes" = "0" ] && [ -t 0 ]; then
-    printf "News language [%s] (or 'auto'): " "$detected"; read -r a; lang="${a:-${lang:-$detected}}"
-    printf "Topic (general/tech/business/sports/world/science/health/entertainment) [%s]: " "${topic:-general}"
-    read -r a; topic="${a:-${topic:-general}}"
+  if [ "$yes" = "0" ] && { [ -t 0 ] || [ "${NEWSLINE_FORCE_TTY:-}" = "1" ]; }; then
+    if [ -z "$lang" ]; then
+      # languages that actually have bundled feeds, offered as a numbered menu
+      local avail c; local -a menu=(auto "Auto-detect (now: $(lang_label "$detected"))")
+      avail=$(python3 -c "import json,sys;d=json.load(open(sys.argv[1]));print(' '.join(k for k in d if k not in ('default','_comment')))" "$HERE/feeds.json" 2>/dev/null)
+      for c in $avail; do menu+=("$c" "$(lang_label "$c")"); done
+      echo "Select news language:" >&2
+      choose "$detected" "${menu[@]}"; lang="$CHOICE"
+    fi
+    if [ -z "$topic" ]; then
+      echo "Select topic:" >&2
+      choose general \
+        general "General" tech "Tech" business "Business" world "World" \
+        sports "Sports" science "Science" health "Health" entertainment "Entertainment"
+      topic="$CHOICE"
+    fi
   else
     lang="${lang:-$detected}"; topic="${topic:-general}"
   fi
