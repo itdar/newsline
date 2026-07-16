@@ -1,43 +1,35 @@
 # newsline
 
-Claude Code 상태줄에 지역·언어에 맞는 뉴스 한 줄 — **완전 로컬**, 그리고 기존 상태줄(예: HUD)을
-**덮지 않고 그 아래에 붙입니다(compose)**.
+**Claude Code 작업 끝나길 기다리는 동안, 상태줄에서 최신 한줄 뉴스를 확인하세요.**
+긴 작업을 기다리는 시간이 뉴스 한 번 훑는 시간이 됩니다 — 세션 하단에 지역·언어 맞춤 헤드라인이
+회전 표시. **완전 로컬**, 기존 상태줄(HUD)은 **그대로 두고 그 아래 줄에** 뉴스를 붙입니다.
 
 [English](../README.md) · **한국어**
+
+## 설치 & 실행 — 한 줄
+
+**curl** — macOS / Linux / WSL (설치 + 셋업까지 바로):
+```sh
+curl -fsSL https://raw.githubusercontent.com/itdar/cc-plugin/master/install.sh | sh
+```
+**Homebrew:**
+```sh
+brew install itdar/tap/newsline && newsline init
+```
+**npm:**
+```sh
+npm i -g newsline-cli && newsline init
+```
+끝 — 뉴스 줄은 **다음 메시지 때** 나타납니다 (재시작 불필요, Claude Code가 핫리로드). 셋업은
+언어·분야를 물어보고(메뉴), 기존 상태줄은 유지합니다.
+
+_(자동 셋업 끄기: `NEWSLINE_NO_INIT=1`. 소스에서: `git clone https://github.com/itdar/cc-plugin && cd cc-plugin && ./install.sh`.)_
 
 ## 무엇인가
 
 세션 하단에 지역 언어 뉴스 헤드라인을 **회전 표시**하는 Claude Code 상태줄 유틸리티입니다.
 로케일 감지·피드 수집·파싱·캐시·렌더링 전부 **로컬에서** 돌아갑니다. 코드·프롬프트·파일·Claude
 대화는 절대 읽지 않습니다.
-
-## 설치
-
-**curl | sh** (macOS / Linux / WSL):
-```sh
-curl -fsSL https://raw.githubusercontent.com/itdar/cc-plugin/master/install.sh | sh
-```
-
-**Homebrew:**
-```sh
-brew install itdar/tap/newsline
-```
-
-**소스에서:**
-```sh
-git clone https://github.com/itdar/cc-plugin && cd cc-plugin && ./install.sh
-```
-
-**curl | sh** 설치는 셋업까지 **자동**입니다 — 언어·분야를 물어본 뒤 상태줄을 연결해요.
-**Homebrew**나 **소스** 설치는 직접 실행:
-```sh
-newsline init
-```
-`init`이 언어·분야를 물어보고(메뉴에서 번호 선택), 상태줄을 등록합니다. **기존 상태줄은 그대로
-두고**(HUD 유지) 그 아래 줄에 뉴스를 보여줍니다. Claude Code가 설정을 핫리로드하므로 **재시작
-없이 다음 메시지 때 바로** 나타납니다.
-
-_(설치 중 자동 셋업을 끄려면 `NEWSLINE_NO_INIT=1`.)_
 
 ## 설정
 

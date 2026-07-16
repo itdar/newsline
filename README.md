@@ -1,45 +1,37 @@
 # newsline
 
-Locale-aware one-line news in your Claude Code status line — **fully local**, and it
-**composes with your existing status line** (e.g. an HUD) instead of replacing it.
+**Waiting for Claude Code to finish? Read the latest one-line news right in your status line.**
+While a long task runs, the wait becomes a quick news check — a rotating, region-appropriate
+headline at the bottom of your session. **Fully local**, and it **composes with your existing
+status line** (your HUD stays visible; news shows on the line below).
 
 **English** · [한국어](readme/ko.md)
 
-## What it is
+## Install & run — one line
 
-A Claude Code status-line utility that shows a rotating, region-appropriate news
-headline at the bottom of your session. Everything runs locally on your machine —
-locale detection, feed fetch, parsing, caching, rendering. It never reads your code,
-prompts, files, or Claude conversations.
-
-## Install
-
-**curl | sh** (macOS / Linux / WSL):
+**curl** — macOS / Linux / WSL (installs *and* sets up right away):
 ```sh
 curl -fsSL https://raw.githubusercontent.com/itdar/cc-plugin/master/install.sh | sh
 ```
-
 **Homebrew:**
 ```sh
-brew install itdar/tap/newsline
+brew install itdar/tap/newsline && newsline init
 ```
-
-**From source:**
+**npm:**
 ```sh
-git clone https://github.com/itdar/cc-plugin && cd cc-plugin && ./install.sh
+npm i -g newsline-cli && newsline init
 ```
+Done — the news line shows on your **next message** to Claude (no restart; Claude Code
+hot-reloads settings). Setup asks for a language & topic (a menu) and keeps your existing
+status line.
 
-The **curl | sh** installer runs setup automatically — it prompts you for a language and
-topic, then wires the status line. For **Homebrew** or **from source**, run setup yourself:
-```sh
-newsline init
-```
-`init` asks for a language and topic (a menu — just pick a number), then registers the
-status line, **keeping whatever status line you already have** (your HUD stays visible,
-news shows on the line below). It appears on your next message to Claude — Claude Code
-hot-reloads settings, so no restart is needed.
+_(Skip auto-setup: `NEWSLINE_NO_INIT=1`. From source: `git clone https://github.com/itdar/cc-plugin && cd cc-plugin && ./install.sh`.)_
 
-_(Skip auto-setup during install with `NEWSLINE_NO_INIT=1`.)_
+## What it is
+
+A Claude Code status-line utility that shows a rotating, region-appropriate news headline at the
+bottom of your session. Everything runs locally — locale detection, feed fetch, parsing, caching,
+rendering. It never reads your code, prompts, files, or Claude conversations.
 
 ## Configure
 
