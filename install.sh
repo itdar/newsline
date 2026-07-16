@@ -37,7 +37,7 @@ echo "✔ installed: $BIN/newsline"
 # Register $BIN on PATH for future shells (idempotent), by shell rc file.
 case ":$PATH:" in
   *":$BIN:"*)
-    echo "next:  newsline init"
+    :
     ;;
   *)
     case "$(basename "${SHELL:-sh}")" in
@@ -56,6 +56,14 @@ case ":$PATH:" in
     echo
     echo "→ apply to THIS shell now:   source $rc"
     echo "  (new terminals apply it automatically)"
-    echo "then:  newsline init"
     ;;
 esac
+
+# Auto-setup: run init now (prompts via the terminal even under curl|sh) unless
+# disabled (NEWSLINE_NO_INIT=1) or there is no terminal to prompt from.
+if [ "${NEWSLINE_NO_INIT:-}" != "1" ] && { [ -t 0 ] || [ -r /dev/tty ]; }; then
+  echo
+  "$BIN/newsline" init
+else
+  echo "next:  newsline init"
+fi

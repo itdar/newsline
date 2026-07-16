@@ -98,7 +98,7 @@ choose() {
     printf "  %2d) %s\n" "$((i + 1))" "${labels[$i]}" >&2
   done
   printf "  # [%d]: " "$defnum" >&2
-  local sel; read -r sel
+  local sel; read -r sel < "${NL_TTY:-/dev/stdin}"
   case "$sel" in ''|*[!0-9]*) sel="$defnum" ;; esac
   if [ "$sel" -ge 1 ] 2>/dev/null && [ "$sel" -le "${#codes[@]}" ] 2>/dev/null; then
     CHOICE="${codes[$((sel - 1))]}"
@@ -143,7 +143,14 @@ cmd_init() {
   done
 
   local detected; detected=$(detect_lang)
-  if [ "$yes" = "0" ] && { [ -t 0 ] || [ "${NEWSLINE_FORCE_TTY:-}" = "1" ]; }; then
+  # Interactive input source: stdin if it's a tty, else the controlling terminal
+  # (/dev/tty) — this lets `curl … | sh` still prompt the user.
+  NL_TTY=""
+  if [ "$yes" = "0" ]; then
+    if [ "${NEWSLINE_FORCE_TTY:-}" = "1" ] || [ -t 0 ]; then NL_TTY=/dev/stdin
+    elif [ -r /dev/tty ]; then NL_TTY=/dev/tty; fi
+  fi
+  if [ -n "$NL_TTY" ]; then
     if [ -z "$lang" ]; then
       # languages that actually have bundled feeds, offered as a numbered menu
       local avail c; local -a menu=(auto "Auto-detect (now: $(lang_label "$detected"))")
@@ -200,7 +207,7 @@ PY
 
   echo "✔ newsline installed (lang=$lang, topic=$topic)."
   [ -n "$base" ] && echo "  composing with your existing status line — it stays visible above the news."
-  echo "  Start a NEW Claude Code session to see it."
+  echo "  It appears on your next message to Claude — no restart needed."
 }
 
 cmd_uninstall() {

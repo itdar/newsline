@@ -14,7 +14,7 @@ CACHE_FILE="$CACHE_DIR/line"
 FEEDS="${NEWSLINE_FEEDS:-$HERE/feeds.json}"
 # The redirect wrapper you control. This is the ONE remote piece — clicks pass
 # through it so monetization can be switched on later WITHOUT re-shipping.
-ENDPOINT="${NEWSLINE_ENDPOINT:-https://go.example.com/r}"
+ENDPOINT="${NEWSLINE_ENDPOINT:-https://newsline.gino.im/r}"
 COUNT="${NEWSLINE_COUNT:-15}"         # how many headlines to cache for rotation
 LOCK="$CACHE_DIR/refresh.lock"
 mkdir -p "$CACHE_DIR" 2>/dev/null
@@ -54,7 +54,7 @@ export NEWSLINE_COUNTRY="$country"
 export NEWSLINE_LOCALTIME="$(date +%H%M)"
 export NEWSLINE_DOW="$(date +%u)"
 export NEWSLINE_TZ="$(date +%z)"
-if ! python3 "$HERE/resolve.py" "$lang" "$FEEDS" "${NEWSLINE_API:-}" > "$RESOLVED" 2>/dev/null \
+if ! python3 "$HERE/resolve.py" "$lang" "$FEEDS" "${NEWSLINE_API:-https://newsline.gino.im}" > "$RESOLVED" 2>/dev/null \
    || [ ! -s "$RESOLVED" ]; then
   cp "$FEEDS" "$RESOLVED" 2>/dev/null   # last-ditch fallback to bundled feeds
 fi

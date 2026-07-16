@@ -1,84 +1,86 @@
-# newsline · plugin (local)
+# newsline
 
-A Claude Code status-line utility that shows one **regional-language news headline**
-at the bottom of your session. Everything runs **locally on your machine**:
-locale detection, feed fetch, parsing, caching, rendering. No account, no login,
-no code/prompt access.
+Locale-aware one-line news in your Claude Code status line — **fully local**, and it
+**composes with your existing status line** (e.g. an HUD) instead of replacing it.
 
-## How it works
+**English** · [한국어](readme/ko.md)
 
-```
-statusline.sh   fast path — prints cached headline instantly (never blocks)
-   └─ (stale?) → refresh.sh   background — fetch RSS, parse, write cache
-                    └─ fetch.py   stdlib-only fetch/parse → OSC 8 link
-feeds.json      locale → keyless public RSS (Google News), no API key
-```
+## What it is
 
-- Detects language from macOS `AppleLocale` / `$LANG` **locally** (no IP geolocation).
-- **Server-first (optional):** if `NEWSLINE_API` is set, `resolve.py` asks your
-  curation API which feeds to use, sending only coarse context (lang, country,
-  localtime, dow, tz) — no personal data. On any failure/offline/timeout it falls
-  back to the bundled `feeds.json`. Unset `NEWSLINE_API` → pure local, unchanged.
-- Pulls a **keyless** feed for that locale directly from the source. `feeds.json`
-  lists several per locale (national outlet first, Google News fallback); the
-  first that yields items wins, so a dead/blocked feed is skipped. RSS **and**
-  Atom are supported.
-- Caches the top `NEWSLINE_COUNT` (default 5) headlines and **rotates** through
-  them, showing a new one every `NEWSLINE_ROTATE` (default 8) seconds — a ticker
-  with zero stored state.
-- Renders each headline as a clickable [OSC 8] terminal hyperlink.
-- Caches for `NEWSLINE_TTL` (default 900s) and refreshes in the background, so the
-  status line is always instant and survives feed outages (stale-tolerant).
-
-### Environment knobs
-
-| Var | Default | Meaning |
-|-----|---------|---------|
-| `NEWSLINE_LANG` | _(auto)_ | force locale, e.g. `ko`/`ja`/`en`. Auto-detect order: this > macOS `AppleLocale` (system region) > `LC_ALL`/`LC_MESSAGES`/`LANG` > `en` |
-| `NEWSLINE_MAXLEN` | `100` | max headline chars before truncation with `…` |
-| `NEWSLINE_ENDPOINT` | `https://go.example.com/r` | redirect wrapper for click links |
-| `NEWSLINE_COUNT` | `5` | headlines cached for rotation |
-| `NEWSLINE_ROTATE` | `8` | seconds each headline stays up |
-| `NEWSLINE_TTL` | `900` | cache age (s) before a background refresh |
-| `NEWSLINE_CACHE` | `~/.cache/newsline` | cache directory |
-| `NEWSLINE_FEEDS` | `./feeds.json` | bundled feed map (fallback source) |
-| `NEWSLINE_API` | _(none)_ | curation API base; server-first feed selection, local fallback on any failure |
-| `NEWSLINE_API_TIMEOUT` | `2` | seconds to wait for the curation API before falling back |
+A Claude Code status-line utility that shows a rotating, region-appropriate news
+headline at the bottom of your session. Everything runs locally on your machine —
+locale detection, feed fetch, parsing, caching, rendering. It never reads your code,
+prompts, files, or Claude conversations.
 
 ## Install
 
-1. `chmod +x statusline.sh refresh.sh`
-2. Merge `settings.snippet.json` into `~/.claude/settings.json` (fix the absolute path).
-3. New Claude Code session → headline appears at the bottom.
-
-Requires `python3` (uses stdlib `urllib` — no `curl`, no dependencies).
-
-## Test it standalone
-
+**curl | sh** (macOS / Linux / WSL):
 ```sh
-# force a fetch, then see the rendered line
-NEWSLINE_ENDPOINT=http://localhost:8787/r ./refresh.sh && cat ~/.cache/newsline/line; echo
-# simulate what Claude Code runs each refresh
-./statusline.sh; echo
+curl -fsSL https://raw.githubusercontent.com/itdar/cc-plugin/master/install.sh | sh
 ```
 
-## The click link (and monetization)
+**Homebrew:**
+```sh
+brew install itdar/tap/newsline
+```
 
-Headlines link through a redirect wrapper (`NEWSLINE_ENDPOINT`, default
-`https://go.example.com/r`), **not** straight to the article. On day one that
-wrapper just forwards you to the real article. This indirection is what lets the
-project later route clicks through affiliate links **without changing anything you
-have installed** — see `../server/`.
+**From source:**
+```sh
+git clone https://github.com/itdar/cc-plugin && cd cc-plugin && ./install.sh
+```
 
-## Disclosure (ship this, from day one)
+The **curl | sh** installer runs setup automatically — it prompts you for a language and
+topic, then wires the status line. For **Homebrew** or **from source**, run setup yourself:
+```sh
+newsline init
+```
+`init` asks for a language and topic (a menu — just pick a number), then registers the
+status line, **keeping whatever status line you already have** (your HUD stays visible,
+news shows on the line below). It appears on your next message to Claude — Claude Code
+hot-reloads settings, so no restart is needed.
 
-> newsline shows public news headlines. Clicks pass through our redirect
-> (`go.example.com`) so we can measure engagement and, in the future, use
-> affiliate links to fund the project. We never read your code, prompts, files,
-> or Claude conversations. Locale is detected locally from your system settings.
-> Feeds are fetched directly from public sources.
+_(Skip auto-setup during install with `NEWSLINE_NO_INIT=1`.)_
 
-Being upfront on day one avoids the bait-and-switch trust problem that sinks
-adware-style tools with developer audiences.
+## Configure
+
+Choose during `newsline init`, or edit `~/.config/newsline/config.json` (or set the env var):
+
+| Key / env var | Default | Meaning |
+|---|---|---|
+| `lang` / `NEWSLINE_LANG` | `auto` | `ko` `ja` `en` `es` `fr` `de` `pt` `zh`, or `auto` |
+| `topic` / `NEWSLINE_TOPIC` | `general` | `general` `tech` `business` `world` `sports` `science` `health` `entertainment` |
+| `rotate` / `NEWSLINE_ROTATE` | `6` | seconds per headline |
+| `count` / `NEWSLINE_COUNT` | `15` | headlines cached for rotation |
+| `maxlen` / `NEWSLINE_MAXLEN` | `120` | max chars; `max` = no truncation; `NN%` ≈ of terminal width |
+| `icon` / `NEWSLINE_ICON` | `📰` | leading glyph; `none` to remove |
+| `linkhint` / `NEWSLINE_LINKHINT` | off | append a `↗` "opens externally" hint |
+| `api` / `NEWSLINE_API` | — | optional curation API (server-first, local fallback) |
+| `endpoint` / `NEWSLINE_ENDPOINT` | — | click-redirect wrapper |
+
+## How it works
+
+- **`newsline render`** (what the status line runs) prints instantly from cache and never
+  blocks; it kicks off a background refresh when the cache is stale.
+- **`newsline refresh`** fetches a keyless regional RSS/Atom feed locally, parses the top
+  headlines, dedupes, and caches them.
+- Headlines are clickable [OSC 8] links. Whether a plain click vs `Cmd`/`Ctrl`+click opens
+  them is decided by your terminal, not by newsline.
+
+## Uninstall
+
+```sh
+newsline uninstall      # removes the wiring and restores your previous status line
+```
+
+## Privacy
+
+Runs locally; detects locale from your system settings (no IP geolocation); fetches public
+feeds directly; never accesses your code, prompts, files, or Claude conversations. Clicks
+pass through a redirect so the project can measure engagement and, in future, use affiliate
+links to fund itself — disclosed here.
+
+## Requirements
+
+`bash`, `python3`. macOS and Linux natively; Windows via WSL or Git Bash.
 
 [OSC 8]: https://gist.github.com/egmontkob/eb114294efbcd5adb1944c9f3cb5feda
