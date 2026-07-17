@@ -32,6 +32,10 @@ GN_TOPICS = {
 }
 LANG_COUNTRY = {"ko": "KR", "ja": "JP", "en": "US", "de": "DE",
                 "fr": "FR", "es": "ES", "pt": "BR", "zh": "CN"}
+# Google News wants regioned codes for some languages (bare "pt"/"zh" 404s or
+# serves the wrong edition).
+GN_HL = {"pt": "pt-BR", "zh": "zh-CN", "en": "en-US"}
+GN_CEID_LANG = {"pt": "pt-419", "zh": "zh-Hans"}
 
 
 def topic_feed(lang, country, topic):
@@ -42,8 +46,10 @@ def topic_feed(lang, country, topic):
     if not t:
         return None
     gl = country or LANG_COUNTRY.get(lang, lang.upper())
+    hl = GN_HL.get(lang, lang)
+    cl = GN_CEID_LANG.get(lang, lang)
     return (f"https://news.google.com/rss/headlines/section/topic/{t}"
-            f"?hl={lang}&gl={gl}&ceid={gl}:{lang}")
+            f"?hl={hl}&gl={gl}&ceid={gl}:{cl}")
 
 
 def local_feeds(lang, path):
@@ -68,8 +74,12 @@ def server_feeds(lang, api_base):
     req = urllib.request.Request(url, headers={"User-Agent": "newsline/0.1"})
     obj = json.loads(urllib.request.urlopen(req, timeout=TIMEOUT).read())
     feeds = obj.get("feeds")
-    if isinstance(feeds, list) and feeds and all(isinstance(x, str) for x in feeds):
-        return feeds
+    if isinstance(feeds, list):
+        # fetch.py urlopens these — accept only http(s) URLs
+        feeds = [x for x in feeds
+                 if isinstance(x, str) and x.startswith(("http://", "https://"))]
+        if feeds:
+            return feeds
     return None
 
 

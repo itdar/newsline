@@ -31,6 +31,8 @@ if [ -s "$CACHE_FILE" ]; then
   n=$(awk 'END{print NR}' "$CACHE_FILE" 2>/dev/null)
   if [ "${n:-0}" -gt 0 ] 2>/dev/null; then
     rot="${NEWSLINE_ROTATE:-6}"          # seconds each headline stays up
+    case "$rot" in ''|*[!0-9]*) rot=6 ;; esac
+    [ "$rot" -ge 1 ] || rot=6            # 0 would divide by zero below
     now="${NEWSLINE_NOW:-$(date +%s)}"   # NEWSLINE_NOW overrides clock (tests/debug)
     idx=$(( (now / rot) % n + 1 ))
     sed -n "${idx}p" "$CACHE_FILE"

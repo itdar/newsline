@@ -1,5 +1,5 @@
 {
-  "_comment": "locale language -> ordered keyless RSS/Atom feeds. National outlet first (in-language, higher quality), Google News locale feed last as a guaranteed fallback. fetch.py tries each in order; the first that yields an item wins, so a dead/blocked feed is skipped gracefully. All URLs here were reachability-validated. When adding feeds, also add the article-link domain to ../server/allowlist.json.",
+  "_comment": "locale language -> ordered keyless RSS/Atom feeds. National outlet first (in-language, higher quality), Google News locale feed last as a guaranteed fallback. fetch.py tries each in order; the first that yields an item wins, so a dead/blocked feed is skipped gracefully. All URLs here were reachability-validated. When adding feeds, also add the article-link domain to the server allowlist (cc-server/worker.js allowlistCfg).",
   "en": [
     "https://feeds.bbci.co.uk/news/rss.xml",
     "https://feeds.npr.org/1001/rss.xml",

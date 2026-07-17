@@ -20,6 +20,13 @@ LOCK="$CACHE_DIR/refresh.lock"
 mkdir -p "$CACHE_DIR" 2>/dev/null
 
 # --- single-flight: if another refresh is already running, bail quietly ---
+# A refresh killed before its EXIT trap runs (SIGKILL, reboot, closed terminal)
+# leaves the lock behind; expire locks older than 120s so refreshes never wedge.
+if [ -d "$LOCK" ]; then
+  now=$(date +%s)
+  lmt=$(stat -f %m "$LOCK" 2>/dev/null || stat -c %Y "$LOCK" 2>/dev/null || echo 0)
+  [ $((now - lmt)) -gt 120 ] && rmdir "$LOCK" 2>/dev/null
+fi
 if ! mkdir "$LOCK" 2>/dev/null; then exit 0; fi
 trap 'rmdir "$LOCK" 2>/dev/null' EXIT
 
@@ -49,14 +56,30 @@ esac
 # --- server-first feed selection (COARSE context only), local fallback ---
 # resolve.py tries $NEWSLINE_API/feed; on any failure it returns local feeds.json.
 # We send lang/country/localtime/dow/tz only — no personal data, no tracking id.
+# The resolved list is reused for NEWSLINE_API_TTL seconds (feed curation changes
+# rarely) so the curation API is hit at most hourly, not on every refresh.
 RESOLVED="$CACHE_DIR/feeds.resolved.json"
+RESOLVE_STAMP="$CACHE_DIR/feeds.resolved.ok"
+RESOLVE_TTL="${NEWSLINE_API_TTL:-3600}"
 export NEWSLINE_COUNTRY="$country"
 export NEWSLINE_LOCALTIME="$(date +%H%M)"
 export NEWSLINE_DOW="$(date +%u)"
 export NEWSLINE_TZ="$(date +%z)"
-if ! python3 "$HERE/resolve.py" "$lang" "$FEEDS" "${NEWSLINE_API:-https://newsline.thesockerrr.workers.dev}" > "$RESOLVED" 2>/dev/null \
-   || [ ! -s "$RESOLVED" ]; then
-  cp "$FEEDS" "$RESOLVED" 2>/dev/null   # last-ditch fallback to bundled feeds
+need_resolve=1
+if [ -s "$RESOLVED" ] && [ -f "$RESOLVE_STAMP" ]; then
+  now=$(date +%s)
+  smt=$(stat -f %m "$RESOLVE_STAMP" 2>/dev/null || stat -c %Y "$RESOLVE_STAMP" 2>/dev/null || echo 0)
+  [ $((now - smt)) -lt "$RESOLVE_TTL" ] && need_resolve=0
+fi
+if [ "$need_resolve" = "1" ]; then
+  if python3 "$HERE/resolve.py" "$lang" "$FEEDS" "${NEWSLINE_API:-https://newsline.thesockerrr.workers.dev}" > "$RESOLVED.tmp" 2>/dev/null \
+     && [ -s "$RESOLVED.tmp" ]; then
+    mv -f "$RESOLVED.tmp" "$RESOLVED"
+    touch "$RESOLVE_STAMP"
+  else
+    rm -f "$RESOLVED.tmp" 2>/dev/null
+    [ -s "$RESOLVED" ] || cp "$FEEDS" "$RESOLVED" 2>/dev/null   # last-ditch fallback to bundled feeds
+  fi
 fi
 
 # --- fetch + parse + build the line; write atomically, keep old cache on failure ---
