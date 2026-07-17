@@ -2,9 +2,11 @@
 """newsline · resolve which feeds to use — server-first, local fallback, topic-aware.
 
 Tries the operator's curation API (NEWSLINE_API) with a short timeout, sending only
-COARSE CONTEXT (lang, country, localtime, dow, tz, topic) — never personal data. On
-ANY failure it falls back to the bundled feeds.json. If a topic preference is set
-(NEWSLINE_TOPIC), a keyless Google News topic feed is prepended so that topic leads.
+COARSE CONTEXT (lang, country, localtime, dow, tz, topic) — never personal data.
+The server's list is used AS-IS (it handles topic: vertical partners first, then
+Google's topic feed). Only when the server is unreachable does the local fallback
+kick in: bundled feeds.json, with a keyless Google News topic feed prepended if a
+topic preference is set (NEWSLINE_TOPIC) so the topic still leads offline.
 
 Prints a feeds.json-shaped object fetch.py consumes:  {"<lang>": [...], "default": [...]}
 
@@ -99,15 +101,16 @@ def main():
     feeds = update = None
     if api_base:
         try:
-            feeds, update = server_feeds(lang, api_base)   # server-first
+            feeds, update = server_feeds(lang, api_base)   # server-first, used AS-IS
         except Exception:
             feeds, update = None, None              # any issue -> local fallback
-    feeds = feeds or local_urls or default
-
-    # topic preference leads (keyless Google News topic feed), general as backup
-    tfeed = topic_feed(lang, os.environ.get("NEWSLINE_COUNTRY", ""), os.environ.get("NEWSLINE_TOPIC", ""))
-    if tfeed:
-        feeds = [tfeed] + [f for f in feeds if f != tfeed]
+    if not feeds:
+        # server unreachable: bundled feeds, topic preference prepended locally
+        feeds = local_urls or default
+        tfeed = topic_feed(lang, os.environ.get("NEWSLINE_COUNTRY", ""),
+                           os.environ.get("NEWSLINE_TOPIC", ""))
+        if tfeed:
+            feeds = [tfeed] + [f for f in feeds if f != tfeed]
 
     if not feeds:
         return 1
