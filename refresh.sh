@@ -18,7 +18,7 @@ ENDPOINT="${NEWSLINE_ENDPOINT:-https://newsline.thesockerrr.workers.dev/r}"
 COUNT="${NEWSLINE_COUNT:-15}"         # how many headlines to cache for rotation
 # Client version, sent to /feed as ?v= for the server-side update nudge.
 # Bump together with package.json when tagging a release.
-export NEWSLINE_VERSION="${NEWSLINE_VERSION:-0.1.0}"
+export NEWSLINE_VERSION="${NEWSLINE_VERSION:-0.1.4}"
 LOCK="$CACHE_DIR/refresh.lock"
 mkdir -p "$CACHE_DIR" 2>/dev/null
 

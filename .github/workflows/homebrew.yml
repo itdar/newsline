@@ -30,6 +30,12 @@ jobs:
           echo "tag=${RAW_TAG}" >> "$GITHUB_OUTPUT"
           echo "version=${RAW_TAG#v}" >> "$GITHUB_OUTPUT"
 
+      - name: Verify version stamp matches tag
+        run: |
+          V="${{ steps.version.outputs.version }}"
+          grep -q "NEWSLINE_VERSION:-$V}" refresh.sh \
+            || { echo "::error::refresh.sh NEWSLINE_VERSION != $V — bump it, commit, then re-tag"; exit 1; }
+
       - name: Calculate SHA256 of the release tarball
         id: sha
         run: |

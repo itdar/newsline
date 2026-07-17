@@ -27,7 +27,12 @@ jobs:
       - name: Set package version from tag
         run: |
           RAW_TAG="${{ github.event.inputs.tag || github.ref_name }}"
-          npm version "${RAW_TAG#v}" --no-git-tag-version --allow-same-version
+          V="${RAW_TAG#v}"
+          # the update nudge compares this stamp against the server's minVersion —
+          # a stale stamp makes updated clients look old forever
+          grep -q "NEWSLINE_VERSION:-$V}" refresh.sh \
+            || { echo "::error::refresh.sh NEWSLINE_VERSION != $V — bump it, commit, then re-tag"; exit 1; }
+          npm version "$V" --no-git-tag-version --allow-same-version
 
       - name: Publish
         run: npm publish --access public
