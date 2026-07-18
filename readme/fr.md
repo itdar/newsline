@@ -10,11 +10,13 @@
 Un titre régional défile en bas de votre session : une longue attente se transforme en un coup d'œil
 rapide à l'actualité. Il s'affiche *sous* votre barre d'état existante (votre HUD reste en place).
 
+<p align="center"><img src="../docs/demo.gif" alt="newsline — titres régionaux défilants dans la barre d'état de Claude Code" width="720"></p>
+
 ## Installer et lancer — une ligne
 
 ```sh
 # curl (macOS / Linux / WSL) — installe et configure immédiatement
-curl -fsSL https://raw.githubusercontent.com/itdar/cc-plugin/master/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/itdar/newsline/master/install.sh | sh
 
 # Homebrew
 brew install itdar/tap/newsline && newsline init
@@ -35,6 +37,25 @@ demande une langue et un thème, et conserve votre barre d'état existante.
   **bascule sur les flux intégrés**.
 - La barre d'état est instantanée (servie depuis un cache) ; les rafraîchissements s'exécutent en
   arrière-plan.
+
+## Confidentialité
+
+Tout ce qui s'exécute sur votre machine se trouve dans ce dépôt — et voici la liste complète
+de ce qui en sort :
+
+- **Curation des flux** (au plus une fois par heure) : `lang`, pays approximatif, heure
+  locale, jour de la semaine, fuseau horaire, `topic` et la version du plugin sont envoyés au
+  service edge pour choisir des sources régionales à jour. Pas d'ID de suivi, pas de données
+  personnelles.
+- **Clics sur les titres** : les liens s'ouvrent via une petite redirection (elle voit l'URL
+  de l'article plus `lang`/`topic`/version), afin de remplacer côté serveur les sources mortes
+  et de compter les clics de façon agrégée. Aucun identifiant par utilisateur.
+- **Jamais envoyé, jamais lu** : votre code, vos prompts, vos fichiers ou vos conversations
+  avec Claude. La barre d'état s'affiche depuis un cache local et n'attend jamais le réseau.
+
+**Mode entièrement local** : mettez `"api": "off"` et `"endpoint": "off"` dans
+`~/.config/newsline/config.json` — les flux viennent du `feeds.json` embarqué et les titres
+pointent directement vers les articles. Rien d'autre que les flux eux-mêmes n'est contacté.
 
 ## Configurer
 

@@ -124,7 +124,8 @@ def render(title, link, endpoint, lang):
     ver = (os.environ.get("NEWSLINE_VERSION") or "").strip()
     if ver:
         q["v"] = ver
-    wrapped = endpoint + "?" + urllib.parse.urlencode(q)
+    # fully-local mode: no endpoint -> link straight to the article, no redirect
+    wrapped = endpoint + "?" + urllib.parse.urlencode(q) if endpoint else link
     if len(title) > MAX_TITLE:
         title = title[: MAX_TITLE - 1] + "…"
     label = f"{ICON} {title}" if ICON else title
@@ -137,6 +138,8 @@ def main():
     if len(sys.argv) < 4:
         return 2
     lang, feeds_path, endpoint = sys.argv[1], sys.argv[2], sys.argv[3]
+    if endpoint.strip().lower() in ("off", "none", "direct", "local"):
+        endpoint = ""
     count = int(sys.argv[4]) if len(sys.argv) > 4 else 5
 
     with open(feeds_path, encoding="utf-8") as f:

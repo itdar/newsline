@@ -10,11 +10,13 @@
 一条轮播的区域头条位于会话底部——漫长的等待就变成了快速浏览新闻的时间。它显示在你现有状态栏的
 *下方*（你的 HUD 保持不变）。
 
+<p align="center"><img src="../docs/demo.gif" alt="newsline — 在 Claude Code 状态栏中轮播的区域头条" width="720"></p>
+
 ## 安装并运行 — 一行搞定
 
 ```sh
 # curl (macOS / Linux / WSL) — 安装并立即完成设置
-curl -fsSL https://raw.githubusercontent.com/itdar/cc-plugin/master/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/itdar/newsline/master/install.sh | sh
 
 # Homebrew
 brew install itdar/tap/newsline && newsline init
@@ -31,6 +33,21 @@ npm i -g newsline-cli && newsline init
 - 一个小型 **边缘服务** 挑选最合适的区域新闻源并路由头条点击，因此无需重装即可保持新闻源常新。
   若无法连接，newsline 会 **回退到内置源**。
 - 状态栏即时显示（来自缓存）；刷新在后台进行。
+
+## 隐私
+
+在你电脑上运行的所有代码都在这个仓库里——以下就是会离开你机器的全部信息：
+
+- **新闻源筛选**（每小时最多一次）：`lang`、粗略的国家、当地时间、星期、时区、`topic` 和插件
+  版本会发送到边缘服务，以便挑选最新的区域新闻源。没有跟踪 ID，没有个人数据。
+- **点击头条时**：链接经由一个小型重定向打开（它只看到文章 URL 加 `lang`/`topic`/版本），以便在
+  服务器端替换失效的新闻源并做聚合点击统计。没有任何按用户区分的标识符。
+- **绝不发送、绝不读取**：你的代码、提示词、文件或与 Claude 的对话。状态栏从本地缓存渲染，
+  从不等待网络。
+
+**完全本地模式**：在 `~/.config/newsline/config.json` 中设置 `"api": "off"` 和
+`"endpoint": "off"` —— 新闻源只使用内置的 `feeds.json`，头条直接链接到文章。除了新闻源本身，
+不会联系任何服务。
 
 ## 配置
 

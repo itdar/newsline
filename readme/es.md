@@ -10,11 +10,13 @@
 Un titular regional rotativo aparece en la parte inferior de tu sesión, así una larga espera se convierte
 en un vistazo rápido a las noticias. Se muestra *debajo* de tu barra de estado actual (tu HUD se mantiene).
 
+<p align="center"><img src="../docs/demo.gif" alt="newsline — titulares regionales rotativos en la barra de estado de Claude Code" width="720"></p>
+
 ## Instalar y ejecutar — una línea
 
 ```sh
 # curl (macOS / Linux / WSL) — instala y configura al instante
-curl -fsSL https://raw.githubusercontent.com/itdar/cc-plugin/master/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/itdar/newsline/master/install.sh | sh
 
 # Homebrew
 brew install itdar/tap/newsline && newsline init
@@ -35,6 +37,24 @@ idioma y el tema, y conserva tu barra de estado actual.
   **recurre a los feeds integrados**.
 - La barra de estado es instantánea (servida desde una caché); las actualizaciones se ejecutan en
   segundo plano.
+
+## Privacidad
+
+Todo lo que se ejecuta en tu equipo está en este repositorio — y esta es la lista completa
+de lo que sale de él:
+
+- **Curación de feeds** (como máximo una vez por hora): `lang`, país aproximado, hora local,
+  día de la semana, zona horaria, `topic` y la versión del plugin se envían al servicio edge
+  para elegir fuentes regionales actualizadas. Sin ID de seguimiento, sin datos personales.
+- **Clics en titulares**: los enlaces se abren a través de una pequeña redirección (ve la URL
+  del artículo más `lang`/`topic`/versión), para poder reemplazar fuentes caídas en el
+  servidor y contar los clics de forma agregada. No hay identificador por usuario.
+- **Nunca se envía ni se lee**: tu código, prompts, archivos o conversaciones con Claude. La
+  barra de estado se dibuja desde una caché local y nunca espera a la red.
+
+**Modo totalmente local**: pon `"api": "off"` y `"endpoint": "off"` en
+`~/.config/newsline/config.json` — los feeds vienen del `feeds.json` incluido y los titulares
+enlazan directamente a los artículos. No se contacta con nada salvo los propios feeds.
 
 ## Configurar
 
