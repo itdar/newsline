@@ -23,6 +23,10 @@ brew install itdar/tap/newsline && newsline init
 
 # npm
 npm i -g newsline-cli && newsline init
+
+# Plugin Claude Code — à lancer dans Claude Code, puis /newsline:setup
+/plugin marketplace add itdar/newsline
+/plugin install newsline@itdar
 ```
 
 La ligne d'actualité apparaît dès votre **prochain message** — sans redémarrage. La configuration vous

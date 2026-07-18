@@ -23,6 +23,10 @@ brew install itdar/tap/newsline && newsline init
 
 # npm
 npm i -g newsline-cli && newsline init
+
+# Claude Code plugin — run inside Claude Code, then /newsline:setup
+/plugin marketplace add itdar/newsline
+/plugin install newsline@itdar
 ```
 
 The news line appears on your **next message** — no restart. Setup asks for a language & topic

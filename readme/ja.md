@@ -23,6 +23,10 @@ brew install itdar/tap/newsline && newsline init
 
 # npm
 npm i -g newsline-cli && newsline init
+
+# Claude Code プラグイン — Claude Code 内で実行し、その後 /newsline:setup
+/plugin marketplace add itdar/newsline
+/plugin install newsline@itdar
 ```
 
 ニュース行は **次のメッセージ** で表示されます — 再起動は不要です。セットアップで言語とトピックを
