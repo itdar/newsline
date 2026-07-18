@@ -1,6 +1,6 @@
 {
   "name": "newsline-cli",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "Locale-aware one-line news in your Claude Code status line — local, composes with your existing status line.",
   "bin": { "newsline": "newsline" },
   "files": [
