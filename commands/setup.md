@@ -23,4 +23,7 @@ Set up **newsline** for the user.
 Notes:
 - This installs the `newsline` CLI to `~/.local` (stable path), so it survives plugin
   updates. To change language/topic later: `newsline init --lang <..> --topic <..> --yes`.
+- Headline color starts as **white**. Each `newsline color` run steps to the next one
+  (default(gray) → white → cyan → yellow → green → blue → magenta → red → back to
+  default), taking effect on the next status-line tick.
 - To remove: `newsline uninstall`.

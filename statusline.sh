@@ -24,6 +24,24 @@ if [ "$needs_refresh" = "1" ]; then
   ( "$HERE/refresh.sh" >/dev/null 2>&1 & ) 2>/dev/null
 fi
 
+# --- optional headline color (NEWSLINE_COLOR: a name, or raw SGR params) ---
+# Applied at PRINT time, not baked into the cache, so `newsline color` shows up
+# on the next status-line tick without waiting for a refresh.
+SGR=""
+case "$(printf '%s' "${NEWSLINE_COLOR:-}" | tr '[:upper:]' '[:lower:]')" in
+  ''|default|none|off) SGR="" ;;
+  dim)        SGR="2"  ;;
+  gray|grey)  SGR="90" ;;
+  red)        SGR="31" ;;  green)   SGR="32" ;;  yellow) SGR="33" ;;
+  blue)       SGR="34" ;;  magenta) SGR="35" ;;  cyan)   SGR="36" ;;
+  white)      SGR="37" ;;  orange)  SGR="38;5;208" ;;
+  *[!0-9\;]*) SGR="" ;;                  # unknown name — ignore, print plain
+  *)          SGR="${NEWSLINE_COLOR}" ;; # raw SGR params, e.g. "38;5;245"
+esac
+colorize() { # wrap text in the configured color (no-op when unset); no newline
+  if [ -n "$SGR" ]; then printf '\033[%sm%s\033[0m' "$SGR" "$1"; else printf '%s' "$1"; fi
+}
+
 # --- print one headline, rotating across the cached set by wall-clock time ---
 # The cache holds N headlines (one per line). We show a different one every
 # NEWSLINE_ROTATE seconds — a ticker feel with zero stored state.
@@ -35,12 +53,12 @@ if [ -s "$CACHE_FILE" ]; then
     [ "$rot" -ge 1 ] || rot=6            # 0 would divide by zero below
     now="${NEWSLINE_NOW:-$(date +%s)}"   # NEWSLINE_NOW overrides clock (tests/debug)
     idx=$(( (now / rot) % n + 1 ))
-    sed -n "${idx}p" "$CACHE_FILE"
+    colorize "$(sed -n "${idx}p" "$CACHE_FILE")"; printf '\n'
   else
-    printf '📰 …'
+    colorize '📰 …'
   fi
 else
-  printf '📰 …'   # first run, before the first refresh lands
+  colorize '📰 …'   # first run, before the first refresh lands
 fi
 
 # --- server-driven update nudge (written/cleared by refresh.sh), below the news ---

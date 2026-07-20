@@ -23,7 +23,7 @@ brew install itdar/tap/newsline && newsline init
 npm i -g newsline-cli && newsline init
 ```
 
-The news line appears on your **next message** — no restart. Setup asks for a language & topic
+The news line appears on your **next message** — no restart. Setup asks for a language, topic & headline color
 and keeps your existing status line.
 
 ## What it does
@@ -46,6 +46,10 @@ Re-run `newsline init`, or edit `~/.config/newsline/config.json`:
 | `count` | `15` | headlines in rotation |
 | `maxlen` | `120` | max characters (`max` = no cut) |
 | `icon` | `📰` | leading glyph (`none` to hide) |
+| `color` | `white` | headline color: `default` `white` `cyan` `yellow` `green` `blue` `magenta` `red` |
+
+Or run `newsline color` — each run steps to the next color (default(gray) → white →
+cyan → yellow → green → blue → magenta → red), shown on the next status-line tick.
 
 ## Uninstall
 

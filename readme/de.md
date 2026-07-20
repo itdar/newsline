@@ -25,7 +25,7 @@ npm i -g newsline-cli && newsline init
 ```
 
 Die News-Zeile erscheint bei deiner **nächsten Nachricht** – kein Neustart nötig. Die Einrichtung fragt
-nach Sprache und Thema und behält deine bestehende Statusleiste bei.
+nach Sprache, Thema und Schlagzeilenfarbe und behält deine bestehende Statusleiste bei.
 
 ## Was es macht
 
@@ -48,6 +48,11 @@ Führe `newsline init` erneut aus oder bearbeite `~/.config/newsline/config.json
 | `count` | `15` | Schlagzeilen im Wechsel |
 | `maxlen` | `120` | maximale Zeichen (`max` = kein Abschneiden) |
 | `icon` | `📰` | vorangestelltes Symbol (`none` zum Ausblenden) |
+| `color` | `white` | Farbe der Schlagzeile: `default` `white` `cyan` `yellow` `green` `blue` `magenta` `red` |
+
+Oder `newsline color` verwenden — jeder Aufruf wechselt zur nächsten Farbe (default(gray) →
+white → cyan → yellow → green → blue → magenta → red), sichtbar beim nächsten
+Statuszeilen-Refresh.
 
 ## Deinstallieren
 

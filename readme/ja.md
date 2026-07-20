@@ -23,7 +23,7 @@ brew install itdar/tap/newsline && newsline init
 npm i -g newsline-cli && newsline init
 ```
 
-ニュース行は **次のメッセージ** で表示されます — 再起動は不要です。セットアップで言語とトピックを
+ニュース行は **次のメッセージ** で表示されます — 再起動は不要です。セットアップで言語・トピック・文字色を
 尋ね、既存のステータスラインはそのまま保持します。
 
 ## 何をするか
@@ -47,6 +47,10 @@ npm i -g newsline-cli && newsline init
 | `count` | `15` | 切り替えるヘッドライン数 |
 | `maxlen` | `120` | 最大文字数（`max` = 無制限） |
 | `icon` | `📰` | 先頭アイコン（`none` で非表示） |
+| `color` | `white` | 見出しの文字色：`default` `white` `cyan` `yellow` `green` `blue` `magenta` `red` |
+
+`newsline color` を実行するたびに次の色へ進みます（default(gray) → white → cyan → yellow →
+green → blue → magenta → red の順で循環、次のステータスライン更新で反映）。
 
 ## アンインストール
 

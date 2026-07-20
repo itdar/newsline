@@ -24,7 +24,7 @@ npm i -g newsline-cli && newsline init
 ```
 
 A linha de notícias aparece na sua **próxima mensagem** — sem reiniciar. A configuração pergunta o
-idioma e o tema, e mantém a sua barra de status atual.
+idioma, o tema e a cor da manchete, e mantém a sua barra de status atual.
 
 ## O que faz
 
@@ -47,6 +47,11 @@ Execute `newsline init` novamente ou edite `~/.config/newsline/config.json`:
 | `count` | `15` | manchetes na rotação |
 | `maxlen` | `120` | máximo de caracteres (`max` = sem corte) |
 | `icon` | `📰` | ícone inicial (`none` para ocultar) |
+| `color` | `white` | cor da manchete: `default` `white` `cyan` `yellow` `green` `blue` `magenta` `red` |
+
+Ou use `newsline color` — cada execução avança para a próxima cor (default(gray) → white →
+cyan → yellow → green → blue → magenta → red), visível no próximo refresh da linha
+de status.
 
 ## Desinstalar
 

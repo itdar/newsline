@@ -23,7 +23,7 @@ brew install itdar/tap/newsline && newsline init
 npm i -g newsline-cli && newsline init
 ```
 
-뉴스 줄은 **다음 메시지 때** 나타납니다 — 재시작 불필요. 셋업은 언어·분야를 물어보고, 기존
+뉴스 줄은 **다음 메시지 때** 나타납니다 — 재시작 불필요. 셋업은 언어·분야·글자 색을 물어보고, 기존
 상태줄은 유지합니다.
 
 ## 무엇을 하나
@@ -45,6 +45,10 @@ npm i -g newsline-cli && newsline init
 | `count` | `15` | 회전 헤드라인 수 |
 | `maxlen` | `120` | 최대 글자수 (`max`=무제한) |
 | `icon` | `📰` | 앞 아이콘 (`none`이면 제거) |
+| `color` | `white` | 뉴스 글자 색: `default` `white` `cyan` `yellow` `green` `blue` `magenta` `red` |
+
+`newsline color`를 실행할 때마다 다음 색으로 넘어갑니다 (default(gray) → white → cyan →
+yellow → green → blue → magenta → red 순환, 다음 상태줄 갱신 때 반영).
 
 ## 제거
 

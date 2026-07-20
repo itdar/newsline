@@ -23,7 +23,7 @@ brew install itdar/tap/newsline && newsline init
 npm i -g newsline-cli && newsline init
 ```
 
-新闻行会在你的 **下一条消息** 时出现——无需重启。设置会询问语言和主题，并保留你现有的状态栏。
+新闻行会在你的 **下一条消息** 时出现——无需重启。设置会询问语言、主题和文字颜色，并保留你现有的状态栏。
 
 ## 它做什么
 
@@ -44,6 +44,10 @@ npm i -g newsline-cli && newsline init
 | `count` | `15` | 轮播头条数量 |
 | `maxlen` | `120` | 最大字符数（`max` = 不截断） |
 | `icon` | `📰` | 前置图标（`none` 为隐藏） |
+| `color` | `white` | 新闻文字颜色：`default` `white` `cyan` `yellow` `green` `blue` `magenta` `red` |
+
+也可以运行 `newsline color` — 每次执行切换到下一种颜色（default(gray) → white → cyan →
+yellow → green → blue → magenta → red，下次状态栏刷新即生效）。
 
 ## 卸载
 

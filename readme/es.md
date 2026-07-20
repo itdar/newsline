@@ -24,7 +24,7 @@ npm i -g newsline-cli && newsline init
 ```
 
 La línea de noticias aparece en tu **próximo mensaje**, sin reiniciar. La configuración te pregunta el
-idioma y el tema, y conserva tu barra de estado actual.
+idioma, el tema y el color del titular, y conserva tu barra de estado actual.
 
 ## Qué hace
 
@@ -48,6 +48,11 @@ Vuelve a ejecutar `newsline init` o edita `~/.config/newsline/config.json`:
 | `count` | `15` | titulares en rotación |
 | `maxlen` | `120` | caracteres máximos (`max` = sin recorte) |
 | `icon` | `📰` | icono inicial (`none` para ocultarlo) |
+| `color` | `white` | color del titular: `default` `white` `cyan` `yellow` `green` `blue` `magenta` `red` |
+
+O usa `newsline color` — cada ejecución pasa al siguiente color (default(gray) → white →
+cyan → yellow → green → blue → magenta → red), visible en el próximo refresco de la
+línea de estado.
 
 ## Desinstalar
 

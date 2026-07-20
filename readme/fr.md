@@ -24,7 +24,7 @@ npm i -g newsline-cli && newsline init
 ```
 
 La ligne d'actualité apparaît dès votre **prochain message** — sans redémarrage. La configuration vous
-demande une langue et un thème, et conserve votre barre d'état existante.
+demande une langue, un thème et une couleur de titre, et conserve votre barre d'état existante.
 
 ## Ce que ça fait
 
@@ -48,6 +48,11 @@ Relancez `newsline init`, ou modifiez `~/.config/newsline/config.json` :
 | `count` | `15` | titres en rotation |
 | `maxlen` | `120` | caractères maximum (`max` = sans coupure) |
 | `icon` | `📰` | icône de tête (`none` pour masquer) |
+| `color` | `white` | couleur du titre : `default` `white` `cyan` `yellow` `green` `blue` `magenta` `red` |
+
+Ou utilisez `newsline color` — chaque exécution passe à la couleur suivante (default(gray) →
+white → cyan → yellow → green → blue → magenta → red), visible au prochain
+rafraîchissement de la ligne d'état.
 
 ## Désinstaller
 
