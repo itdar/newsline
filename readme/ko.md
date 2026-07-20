@@ -67,10 +67,12 @@ npm i -g newsline-cli && newsline init
 | `count` | `15` | 회전 헤드라인 수 |
 | `maxlen` | `120` | 최대 글자수 (`max`=무제한) |
 | `icon` | `📰` | 앞 아이콘 (`none`이면 제거) |
-| `color` | `white` | 뉴스 글자 색: `default` `white` `cyan` `yellow` `green` `blue` `magenta` `red` |
+| `color` | `cyan` | 뉴스 글자 색: `default` `gray` `white` `cyan` `yellow` `green` `blue` `magenta` `red` |
 
-`newsline color`를 실행할 때마다 다음 색으로 넘어갑니다 (default(gray) → white → cyan →
-yellow → green → blue → magenta → red 순환, 다음 상태줄 갱신 때 반영).
+`newsline color <이름>`으로 색을 바로 지정하거나(예: `newsline color gray`), 이름 없이
+`newsline color`를 실행하면 다음 색으로 넘어갑니다 (default → gray → white → cyan →
+yellow → green → blue → magenta → red). `newsline colorlist`로 전체 색 목록을 미리보기와
+함께 확인할 수 있고, 변경은 다음 상태줄 갱신 때 반영됩니다.
 
 ## 업데이트
 

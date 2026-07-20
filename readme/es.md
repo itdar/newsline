@@ -72,11 +72,12 @@ Vuelve a ejecutar `newsline init` o edita `~/.config/newsline/config.json`:
 | `count` | `15` | titulares en rotación |
 | `maxlen` | `120` | caracteres máximos (`max` = sin recorte) |
 | `icon` | `📰` | icono inicial (`none` para ocultarlo) |
-| `color` | `white` | color del titular: `default` `white` `cyan` `yellow` `green` `blue` `magenta` `red` |
+| `color` | `cyan` | color del titular: `default` `gray` `white` `cyan` `yellow` `green` `blue` `magenta` `red` |
 
-O usa `newsline color` — cada ejecución pasa al siguiente color (default(gray) → white →
-cyan → yellow → green → blue → magenta → red), visible en el próximo refresco de la
-línea de estado.
+Fija uno directamente con `newsline color <nombre>` (p. ej. `newsline color gray`), o usa
+`newsline color` sin nombre para pasar al siguiente color (default → gray → white → cyan →
+yellow → green → blue → magenta → red). `newsline colorlist` los muestra todos con una
+vista previa; los cambios se ven en el próximo refresco de la línea de estado.
 
 ## Actualizar
 

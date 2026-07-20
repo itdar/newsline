@@ -71,10 +71,12 @@ npm i -g newsline-cli && newsline init
 | `count` | `15` | 切り替えるヘッドライン数 |
 | `maxlen` | `120` | 最大文字数（`max` = 無制限） |
 | `icon` | `📰` | 先頭アイコン（`none` で非表示） |
-| `color` | `white` | 見出しの文字色：`default` `white` `cyan` `yellow` `green` `blue` `magenta` `red` |
+| `color` | `cyan` | 見出しの文字色：`default` `gray` `white` `cyan` `yellow` `green` `blue` `magenta` `red` |
 
-`newsline color` を実行するたびに次の色へ進みます（default(gray) → white → cyan → yellow →
-green → blue → magenta → red の順で循環、次のステータスライン更新で反映）。
+`newsline color <名前>` で色を直接指定でき（例：`newsline color gray`）、名前なしで
+`newsline color` を実行すると次の色へ進みます（default → gray → white → cyan → yellow →
+green → blue → magenta → red）。`newsline colorlist` で全色をプレビュー付きで一覧でき、
+変更は次のステータスライン更新で反映されます。
 
 ## アップデート
 
