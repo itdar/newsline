@@ -10,17 +10,23 @@
 A rotating regional headline sits at the bottom of your session — so a long wait turns into a
 quick news check. It shows *below* your existing status line (your HUD stays).
 
+<p align="center"><img src="docs/demo.gif" alt="newsline — rotating regional headlines in the Claude Code status line" width="720"></p>
+
 ## Install & run — one line
 
 ```sh
 # curl (macOS / Linux / WSL) — installs and sets up right away
-curl -fsSL https://raw.githubusercontent.com/itdar/cc-plugin/master/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/itdar/newsline/master/install.sh | sh
 
 # Homebrew
 brew install itdar/tap/newsline && newsline init
 
 # npm
 npm i -g newsline-cli && newsline init
+
+# Claude Code plugin — run inside Claude Code, then /newsline:setup
+/plugin marketplace add itdar/newsline
+/plugin install newsline@itdar
 ```
 
 The news line appears on your **next message** — no restart. Setup asks for a language, topic & headline color
@@ -33,6 +39,24 @@ and keeps your existing status line.
 - A small **edge service** picks the best regional sources and routes headline clicks, so sources
   stay fresh without reinstalling. If it's unreachable, newsline **falls back to built-in feeds**.
 - The status line is instant (served from a cache); refreshes run in the background.
+
+## Privacy
+
+Everything that runs on your machine is in this repo — and this is the complete list of
+what ever leaves it:
+
+- **Feed curation** (at most once per hour): `lang`, coarse country, local time, day of
+  week, timezone offset, `topic`, and the plugin version go to the edge service so it can
+  pick fresh regional sources. No tracking ID, no personal data.
+- **Headline clicks**: links open through a small redirect (it sees the article URL plus
+  `lang`/`topic`/version), so dead sources can be swapped server-side and clicks counted
+  in aggregate. There is no per-user identifier.
+- **Never sent, never read**: your code, prompts, files, or Claude conversations. The
+  status line renders from a local cache and never blocks on the network.
+
+**Fully local mode**: set `"api": "off"` and `"endpoint": "off"` in
+`~/.config/newsline/config.json` — feeds come from the bundled `feeds.json` and headlines
+link straight to the articles. Nothing is contacted except the news feeds themselves.
 
 ## Configure
 

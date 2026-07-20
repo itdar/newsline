@@ -1,7 +1,7 @@
 {
   "name": "newsline",
   "description": "Locale-aware one-line news in your Claude Code status line — fully local, composes with your existing status line. Run /newsline:setup after install.",
-  "version": "0.1.0",
+  "version": "0.1.6",
   "author": { "name": "itdar" },
-  "homepage": "https://github.com/itdar/cc-plugin"
+  "homepage": "https://github.com/itdar/newsline"
 }

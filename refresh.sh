@@ -15,10 +15,15 @@ FEEDS="${NEWSLINE_FEEDS:-$HERE/feeds.json}"
 # The redirect wrapper you control. This is the ONE remote piece — clicks pass
 # through it so monetization can be switched on later WITHOUT re-shipping.
 ENDPOINT="${NEWSLINE_ENDPOINT:-https://newsline.thesockerrr.workers.dev/r}"
+# "off" (also none/direct/local) links headlines straight to the article — no redirect
+case "$ENDPOINT" in off|OFF|none|direct|local) ENDPOINT="" ;; esac
+# Curation API base; "off" (also none/local) skips it entirely — bundled feeds only
+API="${NEWSLINE_API:-https://newsline.thesockerrr.workers.dev}"
+case "$API" in off|OFF|none|local) API="" ;; esac
 COUNT="${NEWSLINE_COUNT:-15}"         # how many headlines to cache for rotation
 # Client version, sent to /feed as ?v= for the server-side update nudge.
 # Bump together with package.json when tagging a release.
-export NEWSLINE_VERSION="${NEWSLINE_VERSION:-0.1.4}"
+export NEWSLINE_VERSION="${NEWSLINE_VERSION:-0.1.6}"
 LOCK="$CACHE_DIR/refresh.lock"
 mkdir -p "$CACHE_DIR" 2>/dev/null
 
@@ -75,7 +80,7 @@ if [ -s "$RESOLVED" ] && [ -f "$RESOLVE_STAMP" ]; then
   [ $((now - smt)) -lt "$RESOLVE_TTL" ] && need_resolve=0
 fi
 if [ "$need_resolve" = "1" ]; then
-  if python3 "$HERE/resolve.py" "$lang" "$FEEDS" "${NEWSLINE_API:-https://newsline.thesockerrr.workers.dev}" > "$RESOLVED.tmp" 2>/dev/null \
+  if python3 "$HERE/resolve.py" "$lang" "$FEEDS" "$API" > "$RESOLVED.tmp" 2>/dev/null \
      && [ -s "$RESOLVED.tmp" ]; then
     mv -f "$RESOLVED.tmp" "$RESOLVED"
     touch "$RESOLVE_STAMP"
@@ -105,7 +110,7 @@ if [ -n "$msg" ]; then
   case "$HERE" in                      # install channel by where we live
     *"/node_modules/"*)      ucmd="npm i -g newsline-cli" ;;
     *[Cc]ellar*|*linuxbrew*) ucmd="brew upgrade newsline" ;;
-    *) ucmd="curl -fsSL https://raw.githubusercontent.com/itdar/cc-plugin/master/install.sh | sh" ;;
+    *) ucmd="curl -fsSL https://raw.githubusercontent.com/itdar/newsline/master/install.sh | sh" ;;
   esac
   # yellow line, command in bold bright yellow — mirrors Claude Code's own update nudge
   printf '\033[33m[%s] Run: \033[1;93m%s\033[0m\n' "$msg" "$ucmd" > "$NOTICE.tmp" && mv -f "$NOTICE.tmp" "$NOTICE"

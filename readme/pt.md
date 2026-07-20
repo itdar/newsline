@@ -10,17 +10,23 @@
 Uma manchete regional rotativa fica na parte de baixo da sua sessão — então uma longa espera vira uma
 olhada rápida nas notícias. Ela aparece *abaixo* da sua barra de status atual (seu HUD permanece).
 
+<p align="center"><img src="../docs/demo.gif" alt="newsline — manchetes regionais rotativas na barra de status do Claude Code" width="720"></p>
+
 ## Instalar e executar — uma linha
 
 ```sh
 # curl (macOS / Linux / WSL) — instala e configura na hora
-curl -fsSL https://raw.githubusercontent.com/itdar/cc-plugin/master/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/itdar/newsline/master/install.sh | sh
 
 # Homebrew
 brew install itdar/tap/newsline && newsline init
 
 # npm
 npm i -g newsline-cli && newsline init
+
+# Plugin do Claude Code — execute dentro do Claude Code e depois /newsline:setup
+/plugin marketplace add itdar/newsline
+/plugin install newsline@itdar
 ```
 
 A linha de notícias aparece na sua **próxima mensagem** — sem reiniciar. A configuração pergunta o
@@ -34,6 +40,24 @@ idioma, o tema e a cor da manchete, e mantém a sua barra de status atual.
   mantendo as fontes atualizadas sem reinstalar. Se estiver inacessível, o newsline **usa os feeds
   integrados como alternativa**.
 - A barra de status é instantânea (servida de um cache); as atualizações rodam em segundo plano.
+
+## Privacidade
+
+Tudo o que roda na sua máquina está neste repositório — e esta é a lista completa do que
+sai dela:
+
+- **Curadoria de feeds** (no máximo uma vez por hora): `lang`, país aproximado, hora local,
+  dia da semana, fuso horário, `topic` e a versão do plugin são enviados ao serviço edge para
+  escolher fontes regionais atualizadas. Sem ID de rastreamento, sem dados pessoais.
+- **Cliques nas manchetes**: os links abrem por um pequeno redirecionamento (ele vê a URL do
+  artigo mais `lang`/`topic`/versão), para trocar fontes mortas no servidor e contar cliques
+  de forma agregada. Não há identificador por usuário.
+- **Nunca enviado, nunca lido**: seu código, prompts, arquivos ou conversas com o Claude. A
+  barra de status é desenhada de um cache local e nunca espera pela rede.
+
+**Modo totalmente local**: defina `"api": "off"` e `"endpoint": "off"` em
+`~/.config/newsline/config.json` — os feeds vêm do `feeds.json` incluído e as manchetes
+apontam direto para os artigos. Nada além dos próprios feeds é contatado.
 
 ## Configurar
 

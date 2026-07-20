@@ -4,8 +4,8 @@
 # (You normally never edit the deployed formula by hand.)
 class Newsline < Formula
   desc "Locale-aware one-line news in your Claude Code status line"
-  homepage "https://github.com/itdar/cc-plugin"
-  url "https://github.com/itdar/cc-plugin/archive/refs/tags/TAG_PLACEHOLDER.tar.gz"
+  homepage "https://github.com/itdar/newsline"
+  url "https://github.com/itdar/newsline/archive/refs/tags/TAG_PLACEHOLDER.tar.gz"
   version "VERSION_PLACEHOLDER"
   sha256 "SHA_PLACEHOLDER"
   license "MIT"

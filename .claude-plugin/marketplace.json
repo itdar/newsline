@@ -1,0 +1,20 @@
+{
+  "name": "itdar",
+  "owner": { "name": "itdar", "url": "https://github.com/itdar" },
+  "metadata": {
+    "description": "itdar's Claude Code plugins",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "newsline",
+      "source": "./",
+      "description": "Locale-aware one-line news in your Claude Code status line — composes with your existing status line. Run /newsline:setup after install.",
+      "version": "0.1.6",
+      "author": { "name": "itdar" },
+      "homepage": "https://github.com/itdar/newsline",
+      "license": "MIT",
+      "keywords": ["statusline", "news", "claude-code"]
+    }
+  ]
+}

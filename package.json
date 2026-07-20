@@ -1,6 +1,6 @@
 {
   "name": "newsline-cli",
-  "version": "0.1.4",
+  "version": "0.1.6",
   "description": "Locale-aware one-line news in your Claude Code status line — local, composes with your existing status line.",
   "bin": { "newsline": "newsline" },
   "files": [
@@ -16,7 +16,7 @@
   ],
   "os": ["darwin", "linux"],
   "keywords": ["claude-code", "statusline", "news", "cli"],
-  "repository": { "type": "git", "url": "git+https://github.com/itdar/cc-plugin.git" },
-  "homepage": "https://github.com/itdar/cc-plugin",
+  "repository": { "type": "git", "url": "git+https://github.com/itdar/newsline.git" },
+  "homepage": "https://github.com/itdar/newsline",
   "license": "MIT"
 }

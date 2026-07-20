@@ -1,11 +1,11 @@
 #!/usr/bin/env sh
 # newsline · installer — works from a local checkout OR piped from the web:
 #     ./install.sh
-#     curl -fsSL https://raw.githubusercontent.com/itdar/cc-plugin/master/install.sh | sh
+#     curl -fsSL https://raw.githubusercontent.com/itdar/newsline/master/install.sh | sh
 # No build step; copies the scripts onto your PATH. Idempotent (safe to re-run).
 set -eu
 
-REPO="${NEWSLINE_REPO:-itdar/cc-plugin}"
+REPO="${NEWSLINE_REPO:-itdar/newsline}"
 REF="${NEWSLINE_REF:-master}"
 PREFIX="${NEWSLINE_PREFIX:-$HOME/.local}"
 SHARE="$PREFIX/share/newsline"
