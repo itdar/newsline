@@ -102,3 +102,8 @@ newsline uninstall      # restores your previous status line
 ```
 
 Needs `bash` + `python3` (macOS / Linux; Windows via WSL).
+
+## Contributing
+
+Bug reports and PRs welcome — see [CONTRIBUTING.md](CONTRIBUTING.md) for local setup,
+testing, and the release process.
