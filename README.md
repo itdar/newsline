@@ -70,7 +70,7 @@ Re-run `newsline init`, or edit `~/.config/newsline/config.json`:
 | `count` | `15` | headlines in rotation |
 | `maxlen` | `120` | max characters (`max` = no cut) |
 | `icon` | `📰` | leading glyph (`none` to hide) |
-| `color` | `cyan` | headline color: `default` `gray` `white` `cyan` `yellow` `green` `blue` `magenta` `red` |
+| `color` | `magenta` | headline color: `default` `gray` `white` `cyan` `yellow` `green` `blue` `magenta` `red` |
 
 Set one directly with `newsline color <name>` (e.g. `newsline color gray`), or run
 `newsline color` with no name to step to the next color (default → gray → white → cyan →

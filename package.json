@@ -1,8 +1,12 @@
 {
   "name": "newsline-cli",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Locale-aware one-line news in your Claude Code status line — local, composes with your existing status line.",
   "bin": { "newsline": "newsline" },
+  "scripts": {
+    "sync-version": "bash scripts/sync-version.sh",
+    "version": "npm run --silent sync-version && git add package.json .claude-plugin/plugin.json .claude-plugin/marketplace.json refresh.sh"
+  },
   "files": [
     "newsline",
     "statusline.sh",

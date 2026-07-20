@@ -71,7 +71,7 @@ Execute `newsline init` novamente ou edite `~/.config/newsline/config.json`:
 | `count` | `15` | manchetes na rotação |
 | `maxlen` | `120` | máximo de caracteres (`max` = sem corte) |
 | `icon` | `📰` | ícone inicial (`none` para ocultar) |
-| `color` | `cyan` | cor da manchete: `default` `gray` `white` `cyan` `yellow` `green` `blue` `magenta` `red` |
+| `color` | `magenta` | cor da manchete: `default` `gray` `white` `cyan` `yellow` `green` `blue` `magenta` `red` |
 
 Defina uma diretamente com `newsline color <nome>` (ex.: `newsline color gray`), ou use
 `newsline color` sem nome para avançar para a próxima cor (default → gray → white → cyan →

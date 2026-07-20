@@ -73,7 +73,7 @@ Führe `newsline init` erneut aus oder bearbeite `~/.config/newsline/config.json
 | `count` | `15` | Schlagzeilen im Wechsel |
 | `maxlen` | `120` | maximale Zeichen (`max` = kein Abschneiden) |
 | `icon` | `📰` | vorangestelltes Symbol (`none` zum Ausblenden) |
-| `color` | `cyan` | Farbe der Schlagzeile: `default` `gray` `white` `cyan` `yellow` `green` `blue` `magenta` `red` |
+| `color` | `magenta` | Farbe der Schlagzeile: `default` `gray` `white` `cyan` `yellow` `green` `blue` `magenta` `red` |
 
 Eine direkt setzen mit `newsline color <name>` (z. B. `newsline color gray`), oder
 `newsline color` ohne Namen ausführen, um zur nächsten Farbe zu wechseln (default → gray →

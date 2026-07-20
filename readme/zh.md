@@ -65,7 +65,7 @@ npm i -g newsline-cli && newsline init
 | `count` | `15` | 轮播头条数量 |
 | `maxlen` | `120` | 最大字符数（`max` = 不截断） |
 | `icon` | `📰` | 前置图标（`none` 为隐藏） |
-| `color` | `cyan` | 新闻文字颜色：`default` `gray` `white` `cyan` `yellow` `green` `blue` `magenta` `red` |
+| `color` | `magenta` | 新闻文字颜色：`default` `gray` `white` `cyan` `yellow` `green` `blue` `magenta` `red` |
 
 用 `newsline color <名称>` 直接设置颜色（如 `newsline color gray`），或不带名称运行
 `newsline color` 切换到下一种颜色（default → gray → white → cyan → yellow → green → blue →

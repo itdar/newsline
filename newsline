@@ -193,14 +193,14 @@ cmd_init() {
     fi
     local cur_color; cur_color=$(cfg_get color)
     echo "Select headline color (change anytime: newsline color):" >&2
-    choose "${cur_color:-cyan}" \
+    choose "${cur_color:-magenta}" \
       default "Terminal default" cyan "Cyan" gray "Gray" white "White" \
       yellow "Yellow" green "Green" blue "Blue" magenta "Magenta" red "Red"
     color="$CHOICE"
   else
-    # --yes: keep a color previously set via init/`newsline color`; cyan on first run
+    # --yes: keep a color previously set via init/`newsline color`; magenta on first run
     lang="${lang:-$detected}"; topic="${topic:-general}"
-    color=$(cfg_get color); [ -n "$color" ] || color="cyan"
+    color=$(cfg_get color); [ -n "$color" ] || color="magenta"
   fi
 
   # Always KEEP an existing status line and show newsline below it (no prompt).
