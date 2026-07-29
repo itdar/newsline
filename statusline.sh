@@ -32,9 +32,17 @@ stock_enabled() {
     *) return 1 ;;
   esac
 }
+# KRX cash session (09:00-15:30), local wall clock — outside this window we never
+# hit the API; the last fetched line (i.e. the 15:30 close) just stays on screen as-is.
+# Test overrides: NEWSLINE_STOCK_HOUR / NEWSLINE_STOCK_MINUTE force the clock.
+stock_market_hours() {
+  local h="${NEWSLINE_STOCK_HOUR:-$(date +%H)}" m="${NEWSLINE_STOCK_MINUTE:-$(date +%M)}"
+  local mins=$((10#$h * 60 + 10#$m))
+  [ "$mins" -ge $((9 * 60)) ] && [ "$mins" -lt $((15 * 60 + 30)) ]
+}
 STOCK_FILE="$CACHE_DIR/stock.line"
-if stock_enabled; then
-  STOCK_TTL="${NEWSLINE_STOCK_TTL:-5}"        # prices move faster than headlines
+if stock_enabled && stock_market_hours; then
+  STOCK_TTL="${NEWSLINE_STOCK_TTL:-30}"       # prices move faster than headlines
   stock_needs_refresh=1
   if [ -f "$STOCK_FILE" ]; then
     now=$(date +%s)
