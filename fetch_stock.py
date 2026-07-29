@@ -15,7 +15,10 @@ Usage: fetch_stock.py [codes]
          actually open, else exit 1 so the previous cached line (last
          close of whichever market was live) just stays on screen
          (default: 005930,000660 — Samsung Electronics, SK hynix)
-Exits non-zero on failure so refresh_stock.sh keeps the previous cache.
+Exits non-zero on failure so refresh_stock.sh keeps the previous cache — also
+used deliberately when KOSPI's own marketStatus says CLOSE (weekend/holiday/
+off-hours) and a line is already cached, to skip the extra top5/stock lookup
+below (see NEWSLINE_STOCK_HAS_CACHE, set by refresh_stock.sh).
 Test override: NEWSLINE_STOCK_HOUR forces the "auto" local hour (0-23).
 """
 import os
@@ -116,6 +119,17 @@ def main():
         index = fetch_json(INDEX_URL)["datas"][0]
     except Exception:
         return 1
+
+    # KRX marketStatus catches weekends/holidays/off-hours WITHOUT us hardcoding
+    # a KR holiday calendar (lunar-based, changes yearly). Closed + already have
+    # a cached line -> nothing will have changed, so skip the extra top5/stock
+    # lookup below entirely and just keep that cache (refresh_stock.sh handles
+    # a non-zero exit by leaving the previous file untouched). Closed + no cache
+    # yet (fresh install off-hours) still falls through and builds a full line
+    # from the last real data, same as always.
+    if index.get("marketStatus") != "OPEN" and os.environ.get("NEWSLINE_STOCK_HAS_CACHE") == "1":
+        return 1
+
     parts = [fmt_item(index, "https://finance.naver.com/sise/sise_index.naver?code=KOSPI")]
 
     if top_n:
