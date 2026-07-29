@@ -24,6 +24,28 @@ if [ "$needs_refresh" = "1" ]; then
   ( "$HERE/refresh.sh" >/dev/null 2>&1 & ) 2>/dev/null
 fi
 
+# --- optional KOSPI/ticker line (NEWSLINE_STOCK=on) — own cache/TTL, own lock,
+# so it never waits on (or blocks) the news refresh above ---
+stock_enabled() {
+  case "$(printf '%s' "${NEWSLINE_STOCK:-}" | tr '[:upper:]' '[:lower:]')" in
+    on|yes|1|true) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+STOCK_FILE="$CACHE_DIR/stock.line"
+if stock_enabled; then
+  STOCK_TTL="${NEWSLINE_STOCK_TTL:-5}"        # prices move faster than headlines
+  stock_needs_refresh=1
+  if [ -f "$STOCK_FILE" ]; then
+    now=$(date +%s)
+    smtime=$(stat -f %m "$STOCK_FILE" 2>/dev/null || stat -c %Y "$STOCK_FILE" 2>/dev/null || echo 0)
+    [ $((now - smtime)) -lt "$STOCK_TTL" ] && stock_needs_refresh=0
+  fi
+  if [ "$stock_needs_refresh" = "1" ]; then
+    ( "$HERE/refresh_stock.sh" >/dev/null 2>&1 & ) 2>/dev/null
+  fi
+fi
+
 # --- optional headline color (NEWSLINE_COLOR: a name, or raw SGR params) ---
 # Applied at PRINT time, not baked into the cache, so `newsline color` shows up
 # on the next status-line tick without waiting for a refresh.
@@ -84,4 +106,10 @@ NOTICE_FILE="$CACHE_DIR/notice"
 if [ -s "$NOTICE_FILE" ]; then
   [ -s "$CACHE_FILE" ] || printf '\n'   # placeholder path prints without a newline
   head -1 "$NOTICE_FILE"
+fi
+
+# --- optional KOSPI/ticker line, printed below news + notice ---
+if stock_enabled && [ -s "$STOCK_FILE" ]; then
+  { [ -s "$CACHE_FILE" ] || [ -s "$NOTICE_FILE" ]; } || printf '\n'
+  cat "$STOCK_FILE"
 fi
