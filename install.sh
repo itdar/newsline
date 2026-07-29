@@ -10,7 +10,7 @@ REF="${NEWSLINE_REF:-master}"
 PREFIX="${NEWSLINE_PREFIX:-$HOME/.local}"
 SHARE="$PREFIX/share/newsline"
 BIN="$PREFIX/bin"
-FILES="newsline statusline.sh refresh.sh fetch.py resolve.py feeds.json"
+FILES="newsline statusline.sh refresh.sh refresh_stock.sh fetch.py fetch_stock.py resolve.py feeds.json"
 
 command -v python3 >/dev/null 2>&1 || { echo "✗ newsline needs python3 (not found)"; exit 1; }
 
@@ -29,7 +29,7 @@ fi
 
 mkdir -p "$SHARE" "$BIN"
 for f in $FILES; do cp "$SRCDIR/$f" "$SHARE/$f"; done
-chmod +x "$SHARE/newsline" "$SHARE/statusline.sh" "$SHARE/refresh.sh"
+chmod +x "$SHARE/newsline" "$SHARE/statusline.sh" "$SHARE/refresh.sh" "$SHARE/refresh_stock.sh"
 ln -sf "$SHARE/newsline" "$BIN/newsline"
 
 echo "✔ installed: $BIN/newsline"

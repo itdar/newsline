@@ -81,7 +81,8 @@ env={"lang":"NEWSLINE_LANG","topic":"NEWSLINE_TOPIC","rotate":"NEWSLINE_ROTATE",
      "count":"NEWSLINE_COUNT","maxlen":"NEWSLINE_MAXLEN","icon":"NEWSLINE_ICON",
      "color":"NEWSLINE_COLOR","linkhint":"NEWSLINE_LINKHINT","api":"NEWSLINE_API",
      "endpoint":"NEWSLINE_ENDPOINT","base_statusline":"NEWSLINE_BASE",
-     "clickhint":"NEWSLINE_CLICKHINT"}
+     "clickhint":"NEWSLINE_CLICKHINT","stock":"NEWSLINE_STOCK",
+     "stock_codes":"NEWSLINE_STOCK_CODES"}
 try: d=json.load(open(sys.argv[1]))
 except Exception: d={}
 for k,name in env.items():
@@ -155,13 +156,14 @@ cmd_once() {
 }
 
 cmd_init() {
-  local lang="" topic="" color="" api="" endpoint="" rotate="6" count="15" compose="auto" yes="0" base_override="" rotate_set=0 a
+  local lang="" topic="" color="" api="" endpoint="" rotate="6" count="15" compose="auto" yes="0" base_override="" rotate_set=0 stock="" stock_set=0 stock_codes="" a
   while [ $# -gt 0 ]; do
     case "$1" in
       --lang) lang="$2"; shift 2;;      --topic) topic="$2"; shift 2;;
       --api) api="$2"; shift 2;;        --endpoint) endpoint="$2"; shift 2;;
       --rotate) rotate="$2"; rotate_set=1; shift 2;;  --count) count="$2"; shift 2;;
       --base) base_override="$2"; shift 2;;
+      --stock) stock="$2"; stock_set=1; shift 2;;     --stock-codes) stock_codes="$2"; shift 2;;
       --compose) compose="yes"; shift;; --no-compose) compose="no"; shift;;
       --settings) SETTINGS="$2"; shift 2;; --yes|-y) yes="1"; shift;;
       *) shift;;
@@ -210,6 +212,13 @@ cmd_init() {
       esac
       [ "$rotate" -ge 1 ] 2>/dev/null || rotate=6
     fi
+    if [ "$stock_set" = "0" ]; then
+      # KOSPI top-5 ticker line, shown below the news — off by default
+      local cur_stock; cur_stock=$(cfg_get stock); [ "$cur_stock" = "on" ] || cur_stock="off"
+      echo "Show KOSPI top 5 stock ticker below the news?" >&2
+      choose "$cur_stock" on "Yes" off "No"
+      stock="$CHOICE"
+    fi
   else
     # --yes: keep a color previously set via init/`newsline color`; magenta on first run
     lang="${lang:-$detected}"; topic="${topic:-general}"
@@ -218,7 +227,13 @@ cmd_init() {
     if [ "$rotate_set" = "0" ]; then
       local saved_rotate; saved_rotate=$(cfg_get rotate); [ -n "$saved_rotate" ] && rotate="$saved_rotate"
     fi
+    # keep an existing stock setting on re-init unless --stock was given; off on first run
+    if [ "$stock_set" = "0" ]; then
+      stock=$(cfg_get stock); [ -n "$stock" ] || stock="off"
+    fi
   fi
+  [ -n "$stock_codes" ] || stock_codes=$(cfg_get stock_codes)
+  [ -n "$stock_codes" ] || stock_codes="top5"
 
   # Always KEEP an existing status line and show newsline below it (no prompt).
   # Only --no-compose (or an explicit --base) changes this.
@@ -237,9 +252,9 @@ cmd_init() {
   fi
 
   mkdir -p "$CONFIG_DIR"
-  python3 - "$CONFIG" "$lang" "$topic" "$rotate" "$count" "$api" "$endpoint" "$base" "$base_obj" "$color" <<'PY' || { echo "✗ could not write $CONFIG" >&2; return 1; }
+  python3 - "$CONFIG" "$lang" "$topic" "$rotate" "$count" "$api" "$endpoint" "$base" "$base_obj" "$color" "$stock" "$stock_codes" <<'PY' || { echo "✗ could not write $CONFIG" >&2; return 1; }
 import json,os,sys
-_,path,lang,topic,rotate,count,api,endpoint,base,base_obj,color=sys.argv
+_,path,lang,topic,rotate,count,api,endpoint,base,base_obj,color,stock,stock_codes=sys.argv
 try:
     d={"lang":lang,"topic":topic,"rotate":int(rotate),"count":int(count)}
 except ValueError:
@@ -251,6 +266,9 @@ if base: d["base_statusline"]=base
 if base_obj:
     try: d["base_statusline_obj"]=json.loads(base_obj)
     except Exception: pass
+if stock == "on":
+    d["stock"]=stock
+    if stock_codes: d["stock_codes"]=stock_codes
 tmp=path+".tmp"
 with open(tmp,"w") as f: json.dump(d,f,indent=2,ensure_ascii=False)
 os.replace(tmp,path)
@@ -278,10 +296,11 @@ PY
 
   # apply the new language/topic on the next render, not after the old cache expires
   local cache="${NEWSLINE_CACHE:-$HOME/.cache/newsline}"
-  rm -f "$cache/line" "$cache/feeds.resolved.json" "$cache/feeds.resolved.ok" "$cache/notice" 2>/dev/null
+  rm -f "$cache/line" "$cache/feeds.resolved.json" "$cache/feeds.resolved.ok" "$cache/notice" "$cache/stock.line" 2>/dev/null
 
   echo "✔ newsline installed (lang=$lang, topic=$topic)."
   [ -n "$base" ] && echo "  composing with your existing status line — it stays visible above the news."
+  [ "$stock" = "on" ] && echo "  KOSPI top 5 ticker: on (below the news)."
   echo "  It appears on your next message to Claude — no restart needed."
 }
 
@@ -445,7 +464,8 @@ usage() {
   cat <<'EOF'
 newsline — local news status-line utility
   newsline init [--lang ko] [--topic tech]    set up & wire the status line
-                [--rotate SECS]               (asks language / topic / color / rotation)
+                [--rotate SECS] [--stock on]  (asks language / topic / color / rotation / stock)
+                [--stock-codes top5]
   newsline color [name]                       set headline color (e.g. cyan, gray); with
                                               no name, step to the next: default → gray →
                                               white → cyan → yellow → green → blue →
