@@ -13,8 +13,8 @@ class Newsline < Formula
   depends_on "python@3.12"
 
   def install
-    libexec.install "newsline", "statusline.sh", "refresh.sh",
-                    "fetch.py", "resolve.py", "feeds.json"
+    libexec.install "newsline", "statusline.sh", "refresh.sh", "refresh_stock.sh",
+                    "fetch.py", "fetch_stock.py", "resolve.py", "feeds.json"
     bin.install_symlink libexec/"newsline"
   end
 
