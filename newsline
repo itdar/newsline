@@ -213,11 +213,18 @@ cmd_init() {
       [ "$rotate" -ge 1 ] 2>/dev/null || rotate=6
     fi
     if [ "$stock_set" = "0" ]; then
-      # KOSPI top-5 ticker line, shown below the news — off by default
-      local cur_stock; cur_stock=$(cfg_get stock); [ "$cur_stock" = "on" ] || cur_stock="off"
-      echo "Show KOSPI top 5 stock ticker below the news?" >&2
-      choose "$cur_stock" on "Yes" off "No"
-      stock="$CHOICE"
+      # KOSPI top-5 ticker line, shown below the news — off by default, and only
+      # offered at all when the effective language/region is Korean (KOSPI is a
+      # KR-only index; asking non-KR users about it is just noise).
+      local eff_lang="$lang"; [ "$eff_lang" = "auto" ] && eff_lang="$detected"
+      if [ "$eff_lang" = "ko" ]; then
+        local cur_stock; cur_stock=$(cfg_get stock); [ "$cur_stock" = "on" ] || cur_stock="off"
+        echo "Show KOSPI top 5 stock ticker below the news?" >&2
+        choose "$cur_stock" on "Yes" off "No"
+        stock="$CHOICE"
+      else
+        stock="off"
+      fi
     fi
   else
     # --yes: keep a color previously set via init/`newsline color`; magenta on first run
@@ -227,13 +234,28 @@ cmd_init() {
     if [ "$rotate_set" = "0" ]; then
       local saved_rotate; saved_rotate=$(cfg_get rotate); [ -n "$saved_rotate" ] && rotate="$saved_rotate"
     fi
-    # keep an existing stock setting on re-init unless --stock was given; off on first run
+    # keep an existing stock setting on re-init unless --stock was given; off on
+    # first run, and off unconditionally once the effective language isn't ko
+    # (e.g. re-init switched language away from Korean)
     if [ "$stock_set" = "0" ]; then
-      stock=$(cfg_get stock); [ -n "$stock" ] || stock="off"
+      local eff_lang="$lang"; [ "$eff_lang" = "auto" ] && eff_lang="$detected"
+      if [ "$eff_lang" = "ko" ]; then
+        stock=$(cfg_get stock); [ -n "$stock" ] || stock="off"
+      else
+        stock="off"
+      fi
     fi
   fi
   [ -n "$stock_codes" ] || stock_codes=$(cfg_get stock_codes)
   [ -n "$stock_codes" ] || stock_codes="top5"
+
+  # Safety net for the explicit --stock flag: KOSPI is Korea-only, so refuse to
+  # turn it on for a non-Korean effective language even when passed explicitly.
+  eff_lang="$lang"; [ "$eff_lang" = "auto" ] && eff_lang="$detected"
+  if [ "$eff_lang" != "ko" ] && [ "$stock" = "on" ]; then
+    echo "ℹ KOSPI ticker is Korea-only (lang=$eff_lang); ignoring --stock on" >&2
+    stock="off"
+  fi
 
   # Always KEEP an existing status line and show newsline below it (no prompt).
   # Only --no-compose (or an explicit --base) changes this.

@@ -32,19 +32,27 @@ stock_enabled() {
     *) return 1 ;;
   esac
 }
-# KRX cash session (09:00-15:30), local wall clock — outside this window we never
-# hit the API; the last fetched line (i.e. the 15:30 close) just stays on screen as-is.
-# Test overrides: NEWSLINE_STOCK_HOUR / NEWSLINE_STOCK_MINUTE force the clock.
+# KRX cash session (Mon-Fri 09:00-15:30), local wall clock — outside this window
+# we never hit the API; the last fetched line (Friday's 15:30 close, over the
+# whole weekend) just stays on screen as-is.
+# Test overrides: NEWSLINE_STOCK_HOUR / NEWSLINE_STOCK_MINUTE / NEWSLINE_STOCK_DOW
+# (1=Mon..7=Sun) force the clock.
 stock_market_hours() {
+  local dow="${NEWSLINE_STOCK_DOW:-$(date +%u)}"
+  case "$dow" in 6|7) return 1 ;; esac   # KRX doesn't trade weekends
   local h="${NEWSLINE_STOCK_HOUR:-$(date +%H)}" m="${NEWSLINE_STOCK_MINUTE:-$(date +%M)}"
   local mins=$((10#$h * 60 + 10#$m))
   [ "$mins" -ge $((9 * 60)) ] && [ "$mins" -lt $((15 * 60 + 30)) ]
 }
 STOCK_FILE="$CACHE_DIR/stock.line"
-if stock_enabled && stock_market_hours; then
+# Refresh during the cash session on the usual TTL cadence; outside it, still
+# fetch ONCE if we have no cache at all (e.g. first install at 21:00) so the
+# ticker isn't blank until the next 09:00 open — then leave that last-close
+# line on screen untouched until the session reopens.
+if stock_enabled && { stock_market_hours || [ ! -s "$STOCK_FILE" ]; }; then
   STOCK_TTL="${NEWSLINE_STOCK_TTL:-30}"       # prices move faster than headlines
   stock_needs_refresh=1
-  if [ -f "$STOCK_FILE" ]; then
+  if [ -s "$STOCK_FILE" ] && stock_market_hours; then
     now=$(date +%s)
     smtime=$(stat -f %m "$STOCK_FILE" 2>/dev/null || stat -c %Y "$STOCK_FILE" 2>/dev/null || echo 0)
     [ $((now - smtime)) -lt "$STOCK_TTL" ] && stock_needs_refresh=0

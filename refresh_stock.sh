@@ -25,8 +25,14 @@ fi
 if ! mkdir "$LOCK" 2>/dev/null; then exit 0; fi
 trap 'rmdir "$LOCK" 2>/dev/null' EXIT
 
+# Tell fetch_stock.py whether we already have a line cached — on a closed
+# market (holiday/weekend/off-hours) with nothing cached yet it still builds
+# a full line from the last real data; with a cache already in place it can
+# skip straight past the extra top5 lookup (see fetch_stock.py).
+has_cache=0; [ -s "$CACHE_FILE" ] && has_cache=1
+
 # --- fetch + parse + build the line; write atomically, keep old cache on failure ---
-if python3 "$HERE/fetch_stock.py" "$CODES" > "$CACHE_FILE.tmp" 2>/dev/null \
+if NEWSLINE_STOCK_HAS_CACHE="$has_cache" python3 "$HERE/fetch_stock.py" "$CODES" > "$CACHE_FILE.tmp" 2>/dev/null \
    && [ -s "$CACHE_FILE.tmp" ]; then
   mv -f "$CACHE_FILE.tmp" "$CACHE_FILE"
 else
