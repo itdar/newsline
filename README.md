@@ -75,6 +75,14 @@ Re-run `newsline init`, or edit `~/.config/newsline/config.json`:
 | `color` | `magenta` | headline color: `default` `gray` `white` `cyan` `yellow` `green` `blue` `magenta` `red` |
 | `clickhint` | `auto` | click-modifier hint before the headline (`auto` per terminal, `off` to hide, or custom text) |
 
+### Multiple Claude Code profiles
+
+`newsline init` wires **every** profile at once: `~/.claude` plus each `~/.claude-*/`
+directory that holds a `.claude.json` or `settings.json` (profiles you start with
+`CLAUDE_CONFIG_DIR`). Each profile keeps its own existing status line above the news.
+If you add a new profile later, run `newsline init` again. To wire one settings file
+only, use `newsline init --settings <file>`.
+
 Set one directly with `newsline color <name>` (e.g. `newsline color gray`), or run
 `newsline color` with no name to step to the next color (default → gray → white → cyan →
 yellow → green → blue → magenta → red). `newsline colorlist` lists them all with a live
@@ -101,7 +109,8 @@ Claude Code plugin: run `/plugin marketplace update itdar`, then `/reload-plugin
 ## Uninstall
 
 ```sh
-newsline uninstall           # restores your previous status line
+newsline uninstall           # restores your previous status line in every profile
+newsline uninstall --settings <file>   # only that settings file
 newsline uninstall --purge   # also removes the CLI binary + the PATH line install.sh added
 ```
 

@@ -32,7 +32,9 @@ real setup:
 ```sh
 export NEWSLINE_CONFIG_DIR="$(mktemp -d)/newsline"
 export NEWSLINE_CACHE="$(mktemp -d)/cache"
-export NEWSLINE_SETTINGS="$(mktemp -d)/settings.json"
+export NEWSLINE_SETTINGS="$(mktemp -d)/settings.json"   # one file only
+# to test multi-profile wiring instead: unset NEWSLINE_SETTINGS and set HOME
+# to a temp dir that holds .claude/ and .claude-*/ profile dirs
 
 ./newsline init --yes        # non-interactive setup
 ./newsline once              # fetch + print headlines once

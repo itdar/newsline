@@ -12,6 +12,11 @@
 #   newsline uninstall   remove the wiring, restore what was there.
 #   newsline help
 #
+# Profiles: init / uninstall act on EVERY Claude Code profile — ~/.claude plus
+# each ~/.claude-*/ dir that holds a .claude.json or settings.json (dirs used via
+# CLAUDE_CONFIG_DIR). Each profile keeps its own base status line. Pass
+# --settings <file> (or NEWSLINE_SETTINGS) to act on one settings file only.
+#
 # Test overrides: NEWSLINE_SETTINGS, NEWSLINE_CONFIG_DIR, NEWSLINE_CACHE.
 set -u
 
@@ -25,12 +30,46 @@ done
 HERE="$(cd -P "$(dirname "$SOURCE")" >/dev/null 2>&1 && pwd)"
 CONFIG_DIR="${NEWSLINE_CONFIG_DIR:-${XDG_CONFIG_HOME:-$HOME/.config}/newsline}"
 CONFIG="$CONFIG_DIR/config.json"
-SETTINGS="${NEWSLINE_SETTINGS:-$HOME/.claude/settings.json}"
+# one explicit settings file (env or --settings); empty = every profile
+SETTINGS="${NEWSLINE_SETTINGS:-}"
 
 # Command written into settings.json. ALWAYS an absolute path — Claude Code runs
 # the status line in a non-login shell whose PATH may not include ~/.local/bin.
+# init appends `--settings <file>` so render can pick that profile's base line.
 NL_BIN="$(command -v newsline 2>/dev/null || echo "$HERE/newsline")"
-RENDER_CMD="\"$NL_BIN\" render"
+
+# settings_targets — print the settings files to act on, one per line.
+# Explicit file wins; else ~/.claude (always) + each ~/.claude-*/ profile dir.
+# Dirs are resolved (cd -P) so a symlinked profile is not processed twice.
+settings_targets() {
+  if [ -n "$SETTINGS" ]; then
+    # resolve to an absolute real path so the key in config.json matches the
+    # default-target keys and is the same from any working directory
+    local sdir sbase
+    sdir="$(dirname "$SETTINGS")"; sbase="$(basename "$SETTINGS")"
+    if [ -d "$sdir" ]; then sdir="$(cd -P "$sdir" && pwd)"
+    else case "$sdir" in /*) ;; *) sdir="$PWD/$sdir" ;; esac; fi
+    printf '%s\n' "$sdir/$sbase"; return 0
+  fi
+  local d real seen=$'\n'
+  for d in "$HOME/.claude" "$HOME"/.claude-*/; do
+    d="${d%/}"
+    if [ -d "$d" ]; then
+      real="$(cd -P "$d" 2>/dev/null && pwd)" || continue
+    elif [ "$d" = "$HOME/.claude" ]; then
+      real="$d"                                   # default profile: created on demand
+    else
+      continue
+    fi
+    # only real Claude Code profile dirs, never an unrelated ~/.claude-backup etc.
+    if [ "$d" != "$HOME/.claude" ] && [ ! -e "$real/.claude.json" ] && [ ! -e "$real/settings.json" ]; then
+      continue
+    fi
+    case "$seen" in *$'\n'"$real"$'\n'*) continue ;; esac
+    seen="$seen$real"$'\n'
+    printf '%s\n' "$real/settings.json"
+  done
+}
 
 # ---- tiny JSON helpers (python; no jq dependency) ----
 cfg_get() { # cfg_get <key>
@@ -42,40 +81,13 @@ v=d.get(sys.argv[2])
 print("" if v is None else v)
 PY
 }
-cfg_get_obj() { # cfg_get_obj <key> — print an object-valued config key as JSON
-  python3 - "$CONFIG" "$1" <<'PY' 2>/dev/null
-import json,sys
-try: d=json.load(open(sys.argv[1]))
-except Exception: d={}
-v=d.get(sys.argv[2])
-print(json.dumps(v,ensure_ascii=False) if isinstance(v,dict) else "")
-PY
-}
-settings_statusline_cmd() { # print current statusLine.command of a settings file
-  python3 - "$1" <<'PY' 2>/dev/null
-import json,sys
-try: d=json.load(open(sys.argv[1]))
-except Exception: d={}
-sl=d.get("statusLine")
-print(sl.get("command","") if isinstance(sl,dict) else "")
-PY
-}
-settings_statusline_json() { # print the whole statusLine object of a settings file
-  python3 - "$1" <<'PY' 2>/dev/null
-import json,sys
-try: d=json.load(open(sys.argv[1]))
-except Exception: d={}
-sl=d.get("statusLine")
-print(json.dumps(sl,ensure_ascii=False) if isinstance(sl,dict) and sl.get("command") else "")
-PY
-}
 
 # One python spawn for the whole config (render runs on every status-line tick;
 # per-key cfg_get calls here would cost ~10 interpreter startups per tick).
-load_config() {
+load_config() { # load_config [settings-file] — with a file, use that profile's base
   [ -f "$CONFIG" ] || return 0
   local exports
-  exports=$(python3 - "$CONFIG" <<'PY' 2>/dev/null
+  exports=$(python3 - "$CONFIG" "${1:-}" <<'PY' 2>/dev/null
 import json,sys,shlex
 env={"lang":"NEWSLINE_LANG","topic":"NEWSLINE_TOPIC","rotate":"NEWSLINE_ROTATE",
      "count":"NEWSLINE_COUNT","maxlen":"NEWSLINE_MAXLEN","icon":"NEWSLINE_ICON",
@@ -90,6 +102,12 @@ for k,name in env.items():
     if v is None or v=="": continue
     if k=="lang" and v=="auto": continue
     print("export %s=%s" % (name, shlex.quote(str(v))))
+# per-profile base (init stores one entry per settings file, even when empty)
+key=sys.argv[2] if len(sys.argv)>2 else ""
+bases=d.get("bases")
+if key and isinstance(bases,dict) and isinstance(bases.get(key),dict):
+    b=bases[key].get("command") or ""
+    print("export NEWSLINE_BASE=%s" % shlex.quote(b) if b else "unset NEWSLINE_BASE")
 PY
 )
   [ -n "$exports" ] && eval "$exports"
@@ -137,7 +155,9 @@ choose() {
 
 # ---- subcommands ----
 cmd_render() { # base (existing HUD) first, newsline below — never blocks
-  load_config
+  local key=""
+  [ "${1:-}" = "--settings" ] && key="${2:-}"
+  load_config "$key"
   local input=""
   [ -t 0 ] || input=$(cat 2>/dev/null)     # consume the session JSON if piped
   if [ -n "${NEWSLINE_BASE:-}" ]; then
@@ -235,26 +255,23 @@ cmd_init() {
   [ -n "$stock_codes" ] || stock_codes=$(cfg_get stock_codes)
   [ -n "$stock_codes" ] || stock_codes="top5"
 
-  # Always KEEP an existing status line and show newsline below it (no prompt).
-  # Only --no-compose (or an explicit --base) changes this.
-  local existing base="" base_obj=""
-  if [ -n "$base_override" ]; then
-    base="$base_override"                       # caller supplied the base explicitly
-  elif [ "$compose" != "no" ]; then
-    existing=$(settings_statusline_cmd "$SETTINGS")
-    if [ -n "$existing" ] && ! printf '%s' "$existing" | grep -q "newsline"; then
-      base="$existing"                          # first run: capture the real status line
-      base_obj=$(settings_statusline_json "$SETTINGS")   # verbatim, for uninstall
-    else
-      base=$(cfg_get base_statusline)           # re-init: KEEP the base we already saved
-      base_obj=$(cfg_get_obj base_statusline_obj)
-    fi
-  fi
+  # Wire every profile. Each one KEEPS its own existing status line and shows
+  # newsline below it (no prompt). Only --no-compose (or --base) changes this.
+  #   first run:  capture that profile's real status line as its base
+  #   re-init:    keep the base already saved for that profile (or the legacy
+  #               single base_statusline from older versions)
+  local -a targets=(); local t
+  while IFS= read -r t; do [ -n "$t" ] && targets+=("$t"); done < <(settings_targets)
 
   mkdir -p "$CONFIG_DIR"
-  python3 - "$CONFIG" "$lang" "$topic" "$rotate" "$count" "$api" "$endpoint" "$base" "$base_obj" "$color" "$stock" "$stock_codes" <<'PY' || { echo "✗ could not write $CONFIG" >&2; return 1; }
-import json,os,sys
-_,path,lang,topic,rotate,count,api,endpoint,base,base_obj,color,stock,stock_codes=sys.argv
+  local rc=0
+  python3 - "$CONFIG" "$NL_BIN" "$compose" "$base_override" \
+      "$lang" "$topic" "$rotate" "$count" "$api" "$endpoint" "$color" "$stock" "$stock_codes" \
+      "${targets[@]}" <<'PY' || rc=$?
+import json,os,shlex,sys
+(_,cfg_path,nl_bin,compose,base_override,lang,topic,rotate,count,api,endpoint,
+ color,stock,stock_codes)=sys.argv[:14]
+targets=sys.argv[14:]
 try:
     d={"lang":lang,"topic":topic,"rotate":int(rotate),"count":int(count)}
 except ValueError:
@@ -262,46 +279,89 @@ except ValueError:
 if color and color not in ("default","none","off"): d["color"]=color
 if api: d["api"]=api
 if endpoint: d["endpoint"]=endpoint
-if base: d["base_statusline"]=base
-if base_obj:
-    try: d["base_statusline_obj"]=json.loads(base_obj)
-    except Exception: pass
 if stock == "on":
     d["stock"]=stock
     if stock_codes: d["stock_codes"]=stock_codes
-tmp=path+".tmp"
-with open(tmp,"w") as f: json.dump(d,f,indent=2,ensure_ascii=False)
-os.replace(tmp,path)
-PY
 
-  python3 - "$SETTINGS" "$RENDER_CMD" <<'PY' || { echo "✗ could not update $SETTINGS — fix the file and re-run: newsline init" >&2; return 1; }
-import json,os,sys
-path,cmd=sys.argv[1],sys.argv[2]
-d={}
-if os.path.exists(path):
-    try:
-        with open(path) as f: raw=f.read().strip()
-        d=json.loads(raw) if raw else {}
-        if not isinstance(d,dict): raise ValueError("settings root is not an object")
+try: old=json.load(open(cfg_path))
+except Exception: old={}
+if not isinstance(old,dict): old={}
+bases=old.get("bases") if isinstance(old.get("bases"),dict) else {}
+legacy={"command":old.get("base_statusline") or ""}
+if isinstance(old.get("base_statusline_obj"),dict): legacy["obj"]=old["base_statusline_obj"]
+
+def read_settings(path):
+    if not os.path.exists(path): return {}
+    with open(path) as f: raw=f.read().strip()
+    s=json.loads(raw) if raw else {}
+    if not isinstance(s,dict): raise ValueError("settings root is not an object")
+    return s
+
+failed=0
+plan=[]                       # (path, settings, base entry) — written after config
+for path in targets:
+    try: s=read_settings(path)
     except Exception:
         # never clobber a settings file we can't parse
-        sys.stderr.write("newsline: %s is not valid JSON; refusing to modify it\n" % path)
-        sys.exit(3)
-d["statusLine"]={"type":"command","command":cmd,"refreshInterval":5}
-os.makedirs(os.path.dirname(path) or ".",exist_ok=True)
-tmp=path+".tmp"
-with open(tmp,"w") as f: json.dump(d,f,indent=2,ensure_ascii=False)
-os.replace(tmp,path)
+        sys.stderr.write("✗ %s is not valid JSON; refusing to modify it\n" % path)
+        failed+=1; continue
+    sl=s.get("statusLine"); cur=sl.get("command","") if isinstance(sl,dict) else ""
+    entry={"command":""}
+    if base_override:
+        entry={"command":base_override}
+    elif compose!="no":
+        if cur and "newsline" not in cur:
+            entry={"command":cur,"obj":sl}                 # verbatim, for uninstall
+        elif isinstance(bases.get(path),dict):
+            entry=bases[path]
+        elif cur:                                          # wired by an older version
+            entry=legacy
+    bases[path]=entry
+    plan.append((path,s,entry))
+
+if bases: d["bases"]=bases
+# keep legacy keys so a status line wired by an older version still renders
+if compose!="no" and not base_override and legacy["command"]:
+    d["base_statusline"]=legacy["command"]
+    if "obj" in legacy: d["base_statusline_obj"]=legacy["obj"]
+# save the original status lines FIRST: if this fails, no settings file is touched
+try:
+    tmp=cfg_path+".tmp"
+    with open(tmp,"w") as f: json.dump(d,f,indent=2,ensure_ascii=False)
+    os.replace(tmp,cfg_path)
+except Exception as e:
+    sys.stderr.write("✗ could not write %s: %s\n" % (cfg_path,e)); sys.exit(4)
+
+for path,s,entry in plan:
+    s["statusLine"]={"type":"command",
+                     "command":'"%s" render --settings %s' % (nl_bin, shlex.quote(path)),
+                     "refreshInterval":5}
+    try:
+        os.makedirs(os.path.dirname(path) or ".",exist_ok=True)
+        tmp=path+".tmp"
+        with open(tmp,"w") as f: json.dump(s,f,indent=2,ensure_ascii=False)
+        os.replace(tmp,path)
+    except Exception as e:
+        # its bases entry is harmless: uninstall drops entries newsline does not manage
+        sys.stderr.write("✗ could not update %s: %s\n" % (path,e))
+        failed+=1; continue
+    note="  composing with: %s" % entry["command"] if entry.get("command") else ""
+    print("  ✔ %s%s" % (path, ("\n  "+note) if note else ""))
+sys.exit(1 if failed else 0)
 PY
+  [ "$rc" = "3" ] || [ "$rc" = "4" ] && return 1
 
   # apply the new language/topic on the next render, not after the old cache expires
   local cache="${NEWSLINE_CACHE:-$HOME/.cache/newsline}"
   rm -f "$cache/line" "$cache/feeds.resolved.json" "$cache/feeds.resolved.ok" "$cache/notice" "$cache/stock.line" 2>/dev/null
 
   echo "✔ newsline installed (lang=$lang, topic=$topic)."
-  [ -n "$base" ] && echo "  composing with your existing status line — it stays visible above the news."
   [ "$stock" = "on" ] && echo "  KOSPI top 5 ticker: on (below the news)."
   echo "  It appears on your next message to Claude — no restart needed."
+  if [ "$rc" != "0" ]; then
+    echo "✗ some settings files were skipped — fix them and re-run: newsline init" >&2
+    return 1
+  fi
 }
 
 # canonical headline palette — single source of truth for cycling, listing, and
@@ -379,41 +439,79 @@ PY
 
 cmd_uninstall() {
   local purge=0 a
-  for a in "$@"; do case "$a" in --purge|-p) purge=1 ;; esac; done
-  local base base_obj
-  base=$(cfg_get base_statusline)
-  base_obj=$(cfg_get_obj base_statusline_obj)
-  python3 - "$SETTINGS" "$base" "$base_obj" <<'PY'
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --purge|-p) purge=1; shift;;
+      --settings) SETTINGS="${2:-}"; shift 2;;
+      *) shift;;
+    esac
+  done
+  local -a targets=(); local t
+  while IFS= read -r t; do [ -n "$t" ] && targets+=("$t"); done < <(settings_targets)
+  # revert each profile to ITS saved base; prints "keep" when other profiles
+  # still use newsline (then the shared config must stay)
+  local left scope="all"
+  [ -n "$SETTINGS" ] && scope="one"
+  left=$(python3 - "$CONFIG" "$scope" "${targets[@]}" <<'PY'
 import json,os,sys
-path,base,base_obj=sys.argv[1],sys.argv[2],sys.argv[3]
-try:
-    with open(path) as f: raw=f.read().strip()
-    d=json.loads(raw) if raw else {}
-    if not isinstance(d,dict): raise ValueError("settings root is not an object")
-except FileNotFoundError:
-    print("no settings file; nothing to revert"); sys.exit(0)
-except Exception:
-    print("settings file is not valid JSON; left as-is"); sys.exit(0)
-sl=d.get("statusLine"); cmd=sl.get("command","") if isinstance(sl,dict) else ""
-if "newsline" in cmd:
-    obj=None
-    if base_obj:
-        try: obj=json.loads(base_obj)
-        except Exception: obj=None
+cfg_path=sys.argv[1]; scope=sys.argv[2]; targets=sys.argv[3:]
+try: cfg=json.load(open(cfg_path))
+except Exception: cfg={}
+if not isinstance(cfg,dict): cfg={}
+bases=cfg.get("bases") if isinstance(cfg.get("bases"),dict) else {}
+legacy={"command":cfg.get("base_statusline") or ""}
+if isinstance(cfg.get("base_statusline_obj"),dict): legacy["obj"]=cfg["base_statusline_obj"]
+
+for path in targets:
+    try:
+        with open(path) as f: raw=f.read().strip()
+        d=json.loads(raw) if raw else {}
+        if not isinstance(d,dict): raise ValueError("settings root is not an object")
+    except FileNotFoundError:
+        sys.stderr.write("  %s: no settings file; nothing to revert\n" % path); continue
+    except Exception:
+        sys.stderr.write("  %s: not valid JSON; left as-is\n" % path); continue
+    sl=d.get("statusLine"); cmd=sl.get("command","") if isinstance(sl,dict) else ""
+    if "newsline" not in cmd:
+        sys.stderr.write("  %s: status line not managed by newsline; left as-is\n" % path)
+        bases.pop(path,None); continue
+    entry=bases.get(path) if isinstance(bases.get(path),dict) else legacy
+    obj=entry.get("obj")
     if isinstance(obj,dict) and obj.get("command"):
         d["statusLine"]=obj                    # full original (keeps padding etc.)
-    elif base:
-        d["statusLine"]={"type":"command","command":base}
+    elif entry.get("command"):
+        d["statusLine"]={"type":"command","command":entry["command"]}
     else:
         d.pop("statusLine",None)
     tmp=path+".tmp"
     with open(tmp,"w") as f: json.dump(d,f,indent=2,ensure_ascii=False)
     os.replace(tmp,path)
-    print("reverted status line")
-else:
-    print("status line not managed by newsline; left as-is")
+    bases.pop(path,None)
+    sys.stderr.write("  %s: reverted status line\n" % path)
+
+def still_wired(p):
+    try:
+        sl=json.load(open(p)).get("statusLine")
+        return "newsline" in (sl.get("command","") if isinstance(sl,dict) else "")
+    except Exception:
+        return False
+if scope=="all":
+    # full uninstall: drop stale entries (deleted profile, file no longer wired)
+    # so they do not block removal of the shared config
+    bases={k:v for k,v in bases.items() if still_wired(k)}
+if bases and os.path.exists(cfg_path):          # other profiles still wired
+    cfg["bases"]=bases
+    tmp=cfg_path+".tmp"
+    with open(tmp,"w") as f: json.dump(cfg,f,indent=2,ensure_ascii=False)
+    os.replace(tmp,cfg_path)
+    print("keep")
 PY
+)
   local cache="${NEWSLINE_CACHE:-$HOME/.cache/newsline}"
+  if [ "$left" = "keep" ]; then
+    echo "✔ newsline removed from the selected profile(s); other profiles still use it."
+    return 0
+  fi
   rm -f "$CONFIG" "$cache/line" "$cache/feeds.resolved.json" "$cache/feeds.resolved.ok" "$cache/notice" 2>/dev/null
   echo "✔ newsline uninstalled."
 
@@ -465,13 +563,15 @@ usage() {
 newsline — local news status-line utility
   newsline init [--lang ko] [--topic tech]    set up & wire the status line
                 [--rotate SECS] [--stock on]  (asks language / topic / color / rotation / stock)
-                [--stock-codes top5]
-  newsline color [name]                       set headline color (e.g. cyan, gray); with
+                [--stock-codes top5]          wires every profile: ~/.claude and
+                [--settings FILE]             each ~/.claude-*/ (or only FILE)
+  newsline color [name]                      set headline color (e.g. cyan, gray); with
                                               no name, step to the next: default → gray →
                                               white → cyan → yellow → green → blue →
                                               magenta → red → back to default
   newsline colorlist                          list the available colors with a preview
   newsline uninstall [--purge]                remove & restore previous status line
+                     [--settings FILE]        in every profile (or only FILE)
                                               (--purge also deletes the CLI + PATH line)
 EOF
   if [ "${1:-}" = "--all" ]; then
